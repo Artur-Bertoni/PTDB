@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciamento de Vídeos - PTDB (RF06)</title>
+</head>
+<body>
+
+<h1>Gerenciamento de Vídeos</h1>
+<p>Portal de Treinamento Dom Bosco &middot; RF06 - Manter vídeos (Administrador)</p>
+
+<!-- Mensagens de feedback -->
+<p th:if="${mensagem}" th:text="${mensagem}"></p>
+<p th:if="${erro}" th:text="${erro}"></p>
+
+<p>
+    <a th:href="@{/admin/videos/novo}">+ Cadastrar novo vídeo</a>
+</p>
+
+<!-- Filtro e busca (Read) -->
+<form th:action="@{/admin/videos}" method="get">
+    <fieldset>
+        <legend>Filtrar / Buscar</legend>
+
+        <label>
+            Busca (título/descrição):
+            <input type="text" name="termo" th:value="${termo}">
+        </label>
+
+        <label>
+            Categoria:
+            <select name="categoriaId">
+                <option value="">Todas</option>
+                <option th:each="c : ${categorias}"
+                        th:value="${c.id}"
+                        th:text="${c.nome}"
+                        th:selected="${categoriaId != null and categoriaId == c.id}"></option>
+            </select>
+        </label>
+
+        <label>
+            Status:
+            <select name="status">
+                <option value="">Todos</option>
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:text="${s.descricao}"
+                        th:selected="${status != null and status == s}"></option>
+            </select>
+        </label>
+
+        <button type="submit">Filtrar</button>
+        <a th:href="@{/admin/videos}">Limpar</a>
+    </fieldset>
+</form>
+
+<!-- Listagem -->
+<table border="1" cellpadding="4" cellspacing="0">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Categoria</th>
+        <th>Data de publicação</th>
+        <th>Status</th>
+        <th>Capa</th>
+        <th>Arquivo</th>
+        <th>Ações</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(videos)}">
+        <td colspan="8">Nenhum vídeo encontrado.</td>
+    </tr>
+    <tr th:each="v : ${videos}">
+        <td th:text="${v.id}"></td>
+        <td th:text="${v.titulo}"></td>
+        <td th:text="${v.categoria.nome}"></td>
+        <td th:text="${#temporals.format(v.dataPublicacao, 'dd/MM/yyyy')}"></td>
+        <td th:text="${v.status.descricao}"></td>
+        <td>
+            <a th:if="${v.thumbnail != null}"
+               th:href="@{/admin/midia/thumbnails/{n}(n=${v.thumbnail})}"
+               target="_blank">ver capa</a>
+            <span th:if="${v.thumbnail == null}">-</span>
+        </td>
+        <td>
+            <a th:href="@{/admin/midia/videos/{n}(n=${v.arquivoVideo})}"
+               target="_blank"
+               th:text="${v.arquivoVideoOriginal != null ? v.arquivoVideoOriginal : 'abrir'}"></a>
+        </td>
+        <td>
+            <a th:href="@{/admin/videos/{id}/editar(id=${v.id})}">Editar</a>
+            &nbsp;|&nbsp;
+            <form th:action="@{/admin/videos/{id}/excluir(id=${v.id})}"
+                  method="post"
+                  onsubmit="return confirm('Confirma a exclusão (inativação) deste vídeo?');">
+                <button type="submit">Excluir</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
