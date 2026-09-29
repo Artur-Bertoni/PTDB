@@ -23,6 +23,7 @@ public class VideoForm {
     private String titulo;
 
     @NotBlank(message = "A descricao e obrigatoria.")
+    @Size(max = 4000, message = "A descricao deve ter no maximo 4000 caracteres.")
     private String descricao;
 
     @NotNull(message = "A categoria e obrigatoria.")

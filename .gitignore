@@ -39,3 +39,6 @@ uploads/
 
 # OS
 .DS_Store
+
+# JDK portatil baixado pelo executar.bat
+.jdk/
