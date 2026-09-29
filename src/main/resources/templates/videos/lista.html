@@ -21,20 +21,20 @@
 
         <section class="indicadores" aria-label="Resumo dos vídeos">
             <div class="indicador">
-                <span class="indicador__valor" th:text="${indicadores.total}">0</span>
                 <span class="indicador__rotulo">Vídeos cadastrados</span>
+                <span class="indicador__valor" th:text="${indicadores.total}">0</span>
             </div>
             <div class="indicador indicador--atencao">
-                <span class="indicador__valor" th:text="${indicadores.aguardando}">0</span>
                 <span class="indicador__rotulo">Aguardando avaliação</span>
+                <span class="indicador__valor" th:text="${indicadores.aguardando}">0</span>
             </div>
             <div class="indicador indicador--sucesso">
-                <span class="indicador__valor" th:text="${indicadores.aprovados}">0</span>
                 <span class="indicador__rotulo">Aprovados</span>
+                <span class="indicador__valor" th:text="${indicadores.aprovados}">0</span>
             </div>
             <div class="indicador indicador--erro">
-                <span class="indicador__valor" th:text="${indicadores.reprovados}">0</span>
                 <span class="indicador__rotulo">Reprovados</span>
+                <span class="indicador__valor" th:text="${indicadores.reprovados}">0</span>
             </div>
         </section>
 

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Painel administrativo')}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('painel')}"></aside>
+
+    <main class="conteudo">
+
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Painel administrativo</h1>
+                <p class="pagina__descricao">Visão geral e acesso aos módulos de gestão do portal.</p>
+            </div>
+        </header>
+
+        <section class="indicadores" aria-label="Indicadores do portal">
+            <div class="indicador">
+                <span class="indicador__rotulo">Vídeos cadastrados</span>
+                <span class="indicador__valor" th:text="${indicadores.videosCadastrados}">0</span>
+                <span class="indicador__detalhe"
+                      th:text="'+' + ${indicadores.videosNovosNaSemana} + ' nos últimos 7 dias'">+0 nos últimos 7 dias</span>
+            </div>
+            <div class="indicador indicador--atencao">
+                <span class="indicador__rotulo">Aguardando avaliação</span>
+                <span class="indicador__valor" th:text="${indicadores.videosAguardando}">0</span>
+                <span class="indicador__detalhe"
+                      th:text="${indicadores.videosAguardando > 0} ? 'requer atenção do avaliador' : 'nenhum vídeo na fila'">nenhum vídeo na fila</span>
+            </div>
+            <div class="indicador indicador--sucesso">
+                <span class="indicador__rotulo">Categorias ativas</span>
+                <span class="indicador__valor" th:text="${indicadores.categorias}">0</span>
+                <span class="indicador__detalhe"
+                      th:text="${indicadores.categoriasSemAprovados == 0} ? 'todas com vídeos aprovados' : ${indicadores.categoriasSemAprovados} + ' sem vídeos aprovados'">0 sem vídeos aprovados</span>
+            </div>
+            <div class="indicador indicador--neutro">
+                <span class="indicador__rotulo">Itens de FAQ</span>
+                <span class="indicador__valor">&mdash;</span>
+                <span class="indicador__detalhe">disponível em breve</span>
+            </div>
+        </section>
+
+        <section aria-labelledby="titulo-modulos">
+            <h2 class="secao__titulo" id="titulo-modulos">Módulos</h2>
+            <div class="modulos">
+                <a class="modulo" th:href="@{/admin/videos}">
+                    <span class="modulo__icone modulo__icone--videos" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+                    </span>
+                    <strong class="modulo__titulo">Gerenciar vídeos</strong>
+                    <span class="modulo__descricao">Cadastrar, editar e excluir os vídeos do portal.</span>
+                    <span class="modulo__acao">Acessar &rarr;</span>
+                </a>
+                <div class="modulo modulo--indisponivel" aria-disabled="true">
+                    <span class="modulo__icone modulo__icone--categorias" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                            <path d="M5 7h14M5 12h14M5 17h9"/>
+                        </svg>
+                    </span>
+                    <strong class="modulo__titulo">Gerenciar categorias</strong>
+                    <span class="modulo__descricao">Organizar as categorias usadas na apresentação dos vídeos.</span>
+                    <span class="selo selo--neutro modulo__acao">Em breve</span>
+                </div>
+                <div class="modulo modulo--indisponivel" aria-disabled="true">
+                    <span class="modulo__icone modulo__icone--faq" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                            <path d="M9 9a3 3 0 1 1 4.2 2.7c-.7.3-1.2 1-1.2 1.8v.5M12 18h.01"/>
+                        </svg>
+                    </span>
+                    <strong class="modulo__titulo">Gerenciar FAQ</strong>
+                    <span class="modulo__descricao">Incluir, editar e remover perguntas frequentes.</span>
+                    <span class="selo selo--neutro modulo__acao">Em breve</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="painel-duplo">
+            <section class="painel painel--lista" aria-labelledby="titulo-atividade">
+                <div class="painel__cabecalho">
+                    <h2 id="titulo-atividade">Atividade recente</h2>
+                    <a class="painel__link" th:href="@{/admin/videos}">Ver tudo</a>
+                </div>
+                <p class="vazio vazio--compacto" th:if="${#lists.isEmpty(atividades)}">Nenhuma atividade registrada ainda.</p>
+                <ul class="lista" th:unless="${#lists.isEmpty(atividades)}">
+                    <li class="lista__item" th:each="a : ${atividades}">
+                        <span class="lista__marcador"
+                              th:classappend="${'lista__marcador--' + #strings.toLowerCase(a.tipo.name())}"
+                              aria-hidden="true"></span>
+                        <div>
+                            <p><strong th:text="${a.titulo}">Título</strong> <span th:text="${a.tipo.descricao}">foi cadastrado</span></p>
+                            <span class="lista__meta" th:text="${a.quando}">Hoje, 09:42</span>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="painel painel--lista" aria-labelledby="titulo-fila">
+                <div class="painel__cabecalho">
+                    <h2 id="titulo-fila">Fila de avaliação</h2>
+                    <a class="painel__link" th:href="@{/admin/videos(status='AGUARDANDO_AVALIACAO')}">Ver tudo</a>
+                </div>
+                <p class="vazio vazio--compacto" th:if="${#lists.isEmpty(fila)}">Nenhum vídeo aguardando avaliação.</p>
+                <ul class="lista" th:unless="${#lists.isEmpty(fila)}">
+                    <li class="lista__item lista__item--fila" th:each="item : ${fila}">
+                        <div>
+                            <p><strong th:text="${item.titulo}">Título</strong></p>
+                            <span class="lista__meta" th:text="${item.categoria} + ' · ' + ${item.enviado}">Categoria · enviado hoje</span>
+                        </div>
+                        <span class="selo selo--aguardando_avaliacao">Aguardando</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+    </main>
+</div>
+</body>
+</html>

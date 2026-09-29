@@ -25,11 +25,22 @@ Alternativa manual (qualquer sistema com Java 21+):
 ./mvnw spring-boot:run
 ```
 
-Acesse `http://localhost:8080/` (redireciona para `/admin/videos`).
+Acesse `http://localhost:8080/` (redireciona para o painel administrativo em `/admin`).
 
 Console do H2 (dev): `http://localhost:8080/h2-console` — JDBC URL `jdbc:h2:mem:ptdb`, usuário `sa`, sem senha. O banco é recriado a cada execução.
 
 ## Funcionalidades
+
+### Painel administrativo
+
+Tela inicial da área administrativa (`/admin`), restrita ao perfil Administrador:
+
+- **Indicadores:** vídeos cadastrados (e quantos nos últimos 7 dias), vídeos aguardando avaliação, categorias ativas (e quantas ainda sem vídeos aprovados) e itens de FAQ.
+- **Módulos:** atalhos para o gerenciamento de vídeos, categorias e FAQ. Categorias e FAQ aparecem como "Em breve" até serem implementados.
+- **Atividade recente:** últimos cadastros, edições e exclusões de vídeos, derivados das datas de cadastro/atualização dos próprios vídeos. Aprovações e reprovações entram quando a avaliação existir.
+- **Fila de avaliação:** vídeos aguardando avaliação, do envio mais antigo para o mais recente.
+
+O menu lateral traz Painel e Gerenciar vídeos; Categorias, FAQ, Configurações e Sair aparecem desabilitados até existirem.
 
 ### Gerenciamento de vídeos
 
@@ -71,6 +82,8 @@ Novas telas reutilizam o layout base em `templates/fragments/layout.html`:
 
 | Método | Rota | Descrição |
 | --- | --- | --- | --- | --- |
+| GET | `/` | Redireciona para o painel |
+| GET | `/admin` | Painel administrativo |
 | GET | `/admin/videos` | Listagem com indicadores, filtro e busca |
 | GET | `/admin/videos/novo` | Listagem com o modal de cadastro aberto |
 | POST | `/admin/videos` | Salva cadastro |
@@ -88,18 +101,19 @@ Erros 403, 404 e 500 são exibidos com o layout do portal (`templates/error.html
 ./mvnw test
 ```
 
-Cobrem validação de link/arquivo, visibilidade por perfil, consulta de aprovados, indicadores, fluxo do modal e páginas de erro.
+Cobrem validação de link/arquivo, visibilidade por perfil, consulta de aprovados, indicadores, fluxo do modal, painel administrativo e páginas de erro.
 
 ## Arquitetura (camadas)
 
 ```
 web/            HomeController (redirect raiz)
+painel/         PainelController, PainelService, IndicadoresPainel, AtividadeRecente, ItemFilaAvaliacao, TipoAtividade
 video/          Video, VideoStatus, OrigemVideo, LinkVideo, VideoRepository, VideoService, VideoController, VideoForm, MidiaController
 categoria/      Categoria, CategoriaRepository
 storage/        FileStorageService, StorageException
 security/       PerfilUsuario, UsuarioSessao, AdministradorInterceptor
 common/         exceções e GlobalExceptionHandler
-config/         WebConfig, CargaInicialCategorias
+config/         WebConfig, RelogioConfig, CargaInicialCategorias
 ```
 
 ## Pendências e soluções provisórias
