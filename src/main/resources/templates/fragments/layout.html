@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' - PTDB'">PTDB</title>
+    <link rel="stylesheet" th:href="@{/css/ptdb.css}">
+    <script th:src="@{/js/ptdb.js}" defer></script>
+</head>
+<body>
+
+<aside th:fragment="navegacao(ativo)" class="navegacao">
+    <a class="navegacao__marca" th:href="@{/}">
+        <span class="navegacao__logo" aria-hidden="true">DB</span>
+        <span class="navegacao__nome">
+            <strong>PTDB</strong>
+            <small>Portal de Treinamento Dom Bosco</small>
+        </span>
+    </a>
+
+    <nav class="navegacao__menu" aria-label="Menu principal">
+        <a class="navegacao__link"
+           th:href="@{/admin/videos}"
+           th:classappend="${ativo == 'videos'} ? 'navegacao__link--ativo'"
+           th:aria-current="${ativo == 'videos'} ? 'page'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="5" width="15" height="14" rx="2"/>
+                <path d="M17 10l5-3v10l-5-3z"/>
+            </svg>
+            Gerenciar vídeos
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

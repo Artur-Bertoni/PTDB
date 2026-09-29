@@ -15,7 +15,7 @@
     <artifactId>ptdb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>PTDB</name>
-    <description>Portal de Treinamento Dom Bosco - RF06 Manter videos</description>
+    <description>Portal de Treinamento Dom Bosco</description>
 
     <properties>
         <java.version>21</java.version>

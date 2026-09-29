@@ -6,13 +6,6 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-/**
- * Carga inicial de categorias (dev).
- *
- * <p><b>STUB do RF13.</b> Popula algumas categorias para que o formulario do
- * RF06 tenha opcoes selecionaveis enquanto o gerenciamento de categorias
- * (RF13) nao e implementado.
- */
 @Component
 public class CargaInicialCategorias implements CommandLineRunner {
 
@@ -27,13 +20,12 @@ public class CargaInicialCategorias implements CommandLineRunner {
         if (categoriaRepository.count() > 0) {
             return;
         }
-        List<String> nomes = List.of(
-                "Moodle",
-                "Programacao",
-                "Banco de Dados",
-                "Engenharia de Software",
-                "Redes",
-                "Geral");
-        nomes.forEach(nome -> categoriaRepository.save(new Categoria(nome)));
+        categoriaRepository.saveAll(List.of(
+                new Categoria("Moodle", "Uso do ambiente virtual de aprendizagem."),
+                new Categoria("Programação", "Lógica, linguagens e práticas de desenvolvimento."),
+                new Categoria("Banco de Dados", "Modelagem, SQL e administração de bancos de dados."),
+                new Categoria("Engenharia de Software", "Requisitos, processos, modelagem e qualidade de software."),
+                new Categoria("Redes", "Fundamentos e configuração de redes de computadores."),
+                new Categoria("Geral", "Conteúdos gerais e institucionais do portal.")));
     }
 }

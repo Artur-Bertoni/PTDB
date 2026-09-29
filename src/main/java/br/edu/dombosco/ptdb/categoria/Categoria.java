@@ -7,15 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * Categoria de video.
- *
- * <p><b>STUB do RF13 / RF10.</b> O RF06 depende de uma categoria para
- * classificar o video (campo obrigatorio). Esta entidade minima existe
- * apenas para dar suporte ao RF06 e sera substituida/expandida quando o
- * RF13 (organizacao por categoria) e o RF10 (modelagem definitiva do
- * banco) forem implementados.
- */
 @Entity
 @Table(name = "categoria")
 public class Categoria {
@@ -27,11 +18,15 @@ public class Categoria {
     @Column(nullable = false, unique = true, length = 100)
     private String nome;
 
+    @Column(length = 255)
+    private String descricao;
+
     public Categoria() {
     }
 
-    public Categoria(String nome) {
+    public Categoria(String nome, String descricao) {
         this.nome = nome;
+        this.descricao = descricao;
     }
 
     public Long getId() {
@@ -48,5 +43,13 @@ public class Categoria {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 }

@@ -1,106 +1,260 @@
 <!DOCTYPE html>
 <html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Gerenciamento de Vídeos - PTDB (RF06)</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Gerenciar vídeos')}"></head>
 <body>
+<div class="app">
 
-<h1>Gerenciamento de Vídeos</h1>
-<p>Portal de Treinamento Dom Bosco &middot; RF06 - Manter vídeos (Administrador)</p>
+    <aside th:replace="~{fragments/layout :: navegacao('videos')}"></aside>
 
-<!-- Mensagens de feedback -->
-<p th:if="${mensagem}" th:text="${mensagem}"></p>
-<p th:if="${erro}" th:text="${erro}"></p>
+    <main class="conteudo">
 
-<p>
-    <a th:href="@{/admin/videos/novo}">+ Cadastrar novo vídeo</a>
-</p>
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Gerenciar vídeos</h1>
+                <p class="pagina__descricao">Cadastre, edite e exclua os vídeos de treinamento do portal.</p>
+            </div>
+            <a class="botao botao--primario" th:href="@{/admin/videos/novo}">+ Novo vídeo</a>
+        </header>
 
-<!-- Filtro e busca (Read) -->
-<form th:action="@{/admin/videos}" method="get">
-    <fieldset>
-        <legend>Filtrar / Buscar</legend>
+        <div class="alerta alerta--sucesso" role="status" th:if="${mensagem}" th:text="${mensagem}"></div>
+        <div class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}"></div>
 
-        <label>
-            Busca (título/descrição):
-            <input type="text" name="termo" th:value="${termo}">
-        </label>
+        <section class="indicadores" aria-label="Resumo dos vídeos">
+            <div class="indicador">
+                <span class="indicador__valor" th:text="${indicadores.total}">0</span>
+                <span class="indicador__rotulo">Vídeos cadastrados</span>
+            </div>
+            <div class="indicador indicador--atencao">
+                <span class="indicador__valor" th:text="${indicadores.aguardando}">0</span>
+                <span class="indicador__rotulo">Aguardando avaliação</span>
+            </div>
+            <div class="indicador indicador--sucesso">
+                <span class="indicador__valor" th:text="${indicadores.aprovados}">0</span>
+                <span class="indicador__rotulo">Aprovados</span>
+            </div>
+            <div class="indicador indicador--erro">
+                <span class="indicador__valor" th:text="${indicadores.reprovados}">0</span>
+                <span class="indicador__rotulo">Reprovados</span>
+            </div>
+        </section>
 
-        <label>
-            Categoria:
-            <select name="categoriaId">
-                <option value="">Todas</option>
-                <option th:each="c : ${categorias}"
-                        th:value="${c.id}"
-                        th:text="${c.nome}"
-                        th:selected="${categoriaId != null and categoriaId == c.id}"></option>
-            </select>
-        </label>
+        <form class="painel filtros" th:action="@{/admin/videos}" method="get" role="search">
+            <div class="campo campo--busca">
+                <label class="campo__rotulo" for="termo">Buscar</label>
+                <input class="campo__input" type="search" id="termo" name="termo"
+                       th:value="${termo}" placeholder="Buscar por título ou descrição...">
+            </div>
 
-        <label>
-            Status:
-            <select name="status">
-                <option value="">Todos</option>
-                <option th:each="s : ${statuses}"
-                        th:value="${s}"
-                        th:text="${s.descricao}"
-                        th:selected="${status != null and status == s}"></option>
-            </select>
-        </label>
+            <div class="campo">
+                <label class="campo__rotulo" for="filtro-categoria">Categoria</label>
+                <select class="campo__input" id="filtro-categoria" name="categoriaId">
+                    <option value="">Todas</option>
+                    <option th:each="c : ${categorias}"
+                            th:value="${c.id}"
+                            th:text="${c.nome}"
+                            th:selected="${categoriaId != null and categoriaId == c.id}"></option>
+                </select>
+            </div>
 
-        <button type="submit">Filtrar</button>
-        <a th:href="@{/admin/videos}">Limpar</a>
-    </fieldset>
-</form>
+            <div class="campo">
+                <label class="campo__rotulo" for="filtro-status">Status</label>
+                <select class="campo__input" id="filtro-status" name="status">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s}"
+                            th:text="${s.descricao}"
+                            th:selected="${status != null and status == s}"></option>
+                </select>
+            </div>
 
-<!-- Listagem -->
-<table border="1" cellpadding="4" cellspacing="0">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Título</th>
-        <th>Categoria</th>
-        <th>Data de publicação</th>
-        <th>Status</th>
-        <th>Capa</th>
-        <th>Arquivo</th>
-        <th>Ações</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:if="${#lists.isEmpty(videos)}">
-        <td colspan="8">Nenhum vídeo encontrado.</td>
-    </tr>
-    <tr th:each="v : ${videos}">
-        <td th:text="${v.id}"></td>
-        <td th:text="${v.titulo}"></td>
-        <td th:text="${v.categoria.nome}"></td>
-        <td th:text="${#temporals.format(v.dataPublicacao, 'dd/MM/yyyy')}"></td>
-        <td th:text="${v.status.descricao}"></td>
-        <td>
-            <a th:if="${v.thumbnail != null}"
-               th:href="@{/admin/midia/thumbnails/{n}(n=${v.thumbnail})}"
-               target="_blank">ver capa</a>
-            <span th:if="${v.thumbnail == null}">-</span>
-        </td>
-        <td>
-            <a th:href="@{/admin/midia/videos/{n}(n=${v.arquivoVideo})}"
-               target="_blank"
-               th:text="${v.arquivoVideoOriginal != null ? v.arquivoVideoOriginal : 'abrir'}"></a>
-        </td>
-        <td>
-            <a th:href="@{/admin/videos/{id}/editar(id=${v.id})}">Editar</a>
-            &nbsp;|&nbsp;
-            <form th:action="@{/admin/videos/{id}/excluir(id=${v.id})}"
-                  method="post"
-                  onsubmit="return confirm('Confirma a exclusão (inativação) deste vídeo?');">
-                <button type="submit">Excluir</button>
-            </form>
-        </td>
-    </tr>
-    </tbody>
-</table>
+            <div class="filtros__acoes">
+                <button class="botao botao--primario" type="submit">Filtrar</button>
+                <a class="botao botao--secundario" th:href="@{/admin/videos}">Limpar</a>
+            </div>
+        </form>
+
+        <section class="painel painel--tabela" aria-labelledby="titulo-lista">
+            <div class="painel__cabecalho">
+                <h2 id="titulo-lista">Vídeos cadastrados</h2>
+                <span class="contador"
+                      th:text="${#lists.size(videos) == 1} ? '1 vídeo' : ${#lists.size(videos)} + ' vídeos'"></span>
+            </div>
+
+            <div class="vazio" th:if="${#lists.isEmpty(videos)}">
+                <strong>Nenhum vídeo encontrado.</strong>
+                Ajuste os filtros ou cadastre um novo vídeo.
+            </div>
+
+            <table class="tabela" th:unless="${#lists.isEmpty(videos)}">
+                <thead>
+                <tr>
+                    <th scope="col">Vídeo</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Publicação</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${videos}">
+                    <td>
+                        <div class="tabela__video">
+                            <a class="miniatura"
+                               th:href="${v.link} ? ${v.arquivoLink} : @{/midia/videos/{n}(n=${v.arquivoLink})}"
+                               target="_blank" rel="noopener"
+                               th:aria-label="'Assistir ' + ${v.titulo}">
+                                <img th:if="${v.imagemCapa != null}"
+                                     th:src="@{/midia/capas/{n}(n=${v.imagemCapa})}" alt="" loading="lazy">
+                                <img th:if="${v.imagemCapa == null and v.capaExterna != null}"
+                                     th:src="${v.capaExterna}" alt="" loading="lazy">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+                            </a>
+                            <div class="tabela__video-texto">
+                                <strong th:text="${v.titulo}">Título</strong>
+                                <span th:text="${v.origemVideo.descricao}">Link externo</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-rotulo="Categoria" th:text="${v.categoria.nome}">Categoria</td>
+                    <td data-rotulo="Publicação">
+                        <time th:datetime="${v.dataPublicacao}"
+                              th:text="${#temporals.format(v.dataPublicacao, 'dd/MM/yyyy')}">01/01/2026</time>
+                    </td>
+                    <td data-rotulo="Status">
+                        <span class="selo"
+                              th:classappend="${'selo--' + #strings.toLowerCase(v.status.name())}"
+                              th:text="${v.status.descricao}">Status</span>
+                    </td>
+                    <td class="tabela__acoes">
+                        <a class="botao botao--secundario botao--pequeno"
+                           th:href="@{/admin/videos/{id}/editar(id=${v.id})}">Editar</a>
+                        <form th:action="@{/admin/videos/{id}/excluir(id=${v.id})}" method="post"
+                              onsubmit="return confirm('Confirma a exclusão deste vídeo?');">
+                            <button class="botao botao--perigo botao--pequeno" type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+
+<dialog id="modal-video" class="modal" th:if="${form != null}"
+        data-abrir th:data-fechar="@{/admin/videos}" aria-labelledby="modal-video-titulo">
+    <form class="modal__formulario"
+          th:action="${edicao} ? @{/admin/videos/{id}(id=${form.id})} : @{/admin/videos}"
+          th:object="${form}"
+          method="post"
+          enctype="multipart/form-data"
+          novalidate>
+
+        <header class="modal__cabecalho">
+            <h2 id="modal-video-titulo" th:text="${edicao} ? 'Editar vídeo' : 'Novo vídeo'">Novo vídeo</h2>
+            <a class="modal__fechar" th:href="@{/admin/videos}" aria-label="Fechar">&times;</a>
+        </header>
+
+        <div class="modal__corpo">
+            <div class="alerta alerta--erro" role="alert" th:if="${#fields.hasErrors('*')}">
+                Não foi possível salvar. Revise os campos destacados.
+            </div>
+
+            <div class="formulario__grade">
+
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="titulo">Título <span class="campo__obrigatorio">*</span></label>
+                    <input class="campo__input" type="text" th:field="*{titulo}" maxlength="150"
+                           th:errorclass="campo__input--erro">
+                    <span class="campo__erro" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></span>
+                </div>
+
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="descricao">Descrição <span class="campo__obrigatorio">*</span></label>
+                    <textarea class="campo__input" th:field="*{descricao}" rows="4" maxlength="4000"
+                              th:errorclass="campo__input--erro"></textarea>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></span>
+                </div>
+
+                <div class="campo">
+                    <label class="campo__rotulo" for="categoriaId">Categoria <span class="campo__obrigatorio">*</span></label>
+                    <select class="campo__input" th:field="*{categoriaId}" th:errorclass="campo__input--erro">
+                        <option value="">Selecione...</option>
+                        <option th:each="c : ${categorias}"
+                                th:value="${c.id}"
+                                th:text="${c.nome}"></option>
+                    </select>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('categoriaId')}" th:errors="*{categoriaId}"></span>
+                </div>
+
+                <div class="campo">
+                    <label class="campo__rotulo" for="dataPublicacao">Data de publicação <span class="campo__obrigatorio">*</span></label>
+                    <input class="campo__input" type="date" th:field="*{dataPublicacao}"
+                           th:errorclass="campo__input--erro">
+                    <span class="campo__erro" th:if="${#fields.hasErrors('dataPublicacao')}" th:errors="*{dataPublicacao}"></span>
+                </div>
+
+                <fieldset class="campo campo--largo">
+                    <legend class="campo__rotulo">Vídeo <span class="campo__obrigatorio">*</span></legend>
+                    <div class="alternador" data-alternador="origem">
+                        <label class="alternador__opcao" th:each="o : ${origens}">
+                            <input type="radio" th:field="*{origem}" th:value="${o}">
+                            <span th:text="${o.descricao}">Origem</span>
+                        </label>
+                    </div>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('origem')}" th:errors="*{origem}"></span>
+                </fieldset>
+
+                <div class="campo campo--largo" data-origem="LINK">
+                    <label class="campo__rotulo" for="link">Link do vídeo <span class="campo__obrigatorio">*</span></label>
+                    <input class="campo__input" type="url" th:field="*{link}" maxlength="500"
+                           placeholder="https://www.youtube.com/watch?v=..."
+                           th:errorclass="campo__input--erro">
+                    <span class="campo__ajuda">YouTube, Vimeo, Google Drive ou outro endereço público.</span>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('link')}" th:errors="*{link}"></span>
+                </div>
+
+                <div class="campo campo--largo" data-origem="ARQUIVO">
+                    <label class="campo__rotulo" for="arquivoVideo">
+                        Arquivo do vídeo <span class="campo__obrigatorio" th:unless="${video != null and video.arquivo}">*</span>
+                    </label>
+                    <input class="campo__input" type="file" id="arquivoVideo" name="arquivoVideo" accept="video/*"
+                           th:classappend="${#fields.hasErrors('arquivoVideo')} ? 'campo__input--erro'">
+                    <span class="campo__ajuda" th:if="${video != null and video.arquivo}">
+                        Arquivo atual: <strong th:text="${video.nomeArquivoOriginal ?: video.arquivoLink}"></strong>.
+                        Deixe em branco para mantê-lo.
+                    </span>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('arquivoVideo')}" th:errors="*{arquivoVideo}"></span>
+                </div>
+
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="imagemCapa">Imagem de capa</label>
+                    <input class="campo__input" type="file" id="imagemCapa" name="imagemCapa" accept="image/*"
+                           th:classappend="${#fields.hasErrors('imagemCapa')} ? 'campo__input--erro'">
+                    <span class="campo__ajuda">Opcional. Para links do YouTube, a capa do próprio vídeo é usada automaticamente.</span>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('imagemCapa')}" th:errors="*{imagemCapa}"></span>
+                    <div class="campo__previa" th:if="${video != null and (video.imagemCapa != null or video.capaExterna != null)}">
+                        <img th:src="${video.imagemCapa != null} ? @{/midia/capas/{n}(n=${video.imagemCapa})} : ${video.capaExterna}"
+                             alt="Capa atual do vídeo">
+                        <span class="campo__ajuda" th:text="${video.imagemCapa != null} ? 'Capa atual. Deixe em branco para mantê-la.' : 'Capa obtida do YouTube.'"></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="formulario__aviso">
+                Ao salvar, o vídeo fica com status "Aguardando avaliação" e só aparece para os alunos depois de aprovado.
+            </p>
+        </div>
+
+        <footer class="modal__rodape">
+            <a class="botao botao--secundario" th:href="@{/admin/videos}">Cancelar</a>
+            <button class="botao botao--primario" type="submit"
+                    th:text="${edicao} ? 'Salvar alterações' : 'Salvar vídeo'">Salvar vídeo</button>
+        </footer>
+
+    </form>
+</dialog>
 
 </body>
 </html>

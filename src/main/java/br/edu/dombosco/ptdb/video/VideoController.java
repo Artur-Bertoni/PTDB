@@ -13,16 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Controller do RF06 - Manter videos (area do Administrador).
- *
- * <p>Expõe a listagem com filtro/busca e o formulario de cadastro/edicao,
- * alem das acoes de exclusao logica. Todas as rotas ficam sob
- * {@code /admin/videos} e sao protegidas pelo interceptor de Administrador.
- */
 @Controller
 @RequestMapping("/admin/videos")
 public class VideoController {
+
+    private static final String VIEW = "videos/lista";
+    private static final String REDIRECT_LISTA = "redirect:/admin/videos";
 
     private final VideoService videoService;
     private final CategoriaRepository categoriaRepository;
@@ -32,90 +28,96 @@ public class VideoController {
         this.categoriaRepository = categoriaRepository;
     }
 
-    /** Consulta (Read) - listagem com filtro por texto, categoria e status. */
     @GetMapping
     public String listar(@RequestParam(required = false) String termo,
                          @RequestParam(required = false) Long categoriaId,
                          @RequestParam(required = false) VideoStatus status,
                          Model model) {
-        model.addAttribute("videos", videoService.listar(termo, categoriaId, status));
-        model.addAttribute("categorias", categoriaRepository.findAll());
-        model.addAttribute("statuses", VideoStatus.values());
-        model.addAttribute("termo", termo);
-        model.addAttribute("categoriaId", categoriaId);
-        model.addAttribute("status", status);
-        return "videos/lista";
+        prepararListagem(model, termo, categoriaId, status);
+        return VIEW;
     }
 
-    /** Formulario de cadastro (Create). */
     @GetMapping("/novo")
     public String novo(Model model) {
-        model.addAttribute("form", new VideoForm());
-        model.addAttribute("edicao", false);
-        model.addAttribute("categorias", categoriaRepository.findAll());
-        return "videos/formulario";
+        prepararListagem(model, null, null, null);
+        abrirFormulario(model, new VideoForm(), null);
+        return VIEW;
     }
 
-    /** Persiste o cadastro (Create). */
     @PostMapping
     public String criar(@Valid @ModelAttribute("form") VideoForm form,
                         BindingResult result,
                         Model model,
                         RedirectAttributes redirect) {
+        videoService.validar(form, null, result);
         if (result.hasErrors()) {
-            model.addAttribute("edicao", false);
-            model.addAttribute("categorias", categoriaRepository.findAll());
-            return "videos/formulario";
+            prepararListagem(model, null, null, null);
+            abrirFormulario(model, form, null);
+            return VIEW;
         }
         videoService.criar(form);
-        redirect.addFlashAttribute("mensagem",
-                "Video cadastrado com sucesso (aguardando avaliacao).");
-        return "redirect:/admin/videos";
+        redirect.addFlashAttribute("mensagem", "Vídeo cadastrado. Ele ficará aguardando avaliação.");
+        return REDIRECT_LISTA;
     }
 
-    /** Formulario de edicao (Update). */
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
         Video video = videoService.buscarPorId(id);
-
         VideoForm form = new VideoForm();
         form.setId(video.getId());
         form.setTitulo(video.getTitulo());
         form.setDescricao(video.getDescricao());
         form.setCategoriaId(video.getCategoria().getId());
         form.setDataPublicacao(video.getDataPublicacao());
-
-        model.addAttribute("form", form);
-        model.addAttribute("edicao", true);
-        model.addAttribute("video", video);
-        model.addAttribute("categorias", categoriaRepository.findAll());
-        return "videos/formulario";
+        form.setOrigem(video.getOrigemVideo());
+        if (video.isLink()) {
+            form.setLink(video.getArquivoLink());
+        }
+        prepararListagem(model, null, null, null);
+        abrirFormulario(model, form, video);
+        return VIEW;
     }
 
-    /** Persiste a edicao (Update). */
     @PostMapping("/{id}")
     public String atualizar(@PathVariable Long id,
                             @Valid @ModelAttribute("form") VideoForm form,
                             BindingResult result,
                             Model model,
                             RedirectAttributes redirect) {
+        Video atual = videoService.buscarPorId(id);
+        form.setId(id);
+        videoService.validar(form, atual, result);
         if (result.hasErrors()) {
-            model.addAttribute("edicao", true);
-            model.addAttribute("video", videoService.buscarPorId(id));
-            model.addAttribute("categorias", categoriaRepository.findAll());
-            return "videos/formulario";
+            prepararListagem(model, null, null, null);
+            abrirFormulario(model, form, atual);
+            return VIEW;
         }
         videoService.atualizar(id, form);
-        redirect.addFlashAttribute("mensagem",
-                "Video atualizado com sucesso (retornou para avaliacao).");
-        return "redirect:/admin/videos";
+        redirect.addFlashAttribute("mensagem", "Vídeo atualizado. Ele voltou para avaliação.");
+        return REDIRECT_LISTA;
     }
 
-    /** Exclusao logica (Delete) - inativacao do registro. */
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
         videoService.excluir(id);
-        redirect.addFlashAttribute("mensagem", "Video excluido (inativado) com sucesso.");
-        return "redirect:/admin/videos";
+        redirect.addFlashAttribute("mensagem", "Vídeo excluído.");
+        return REDIRECT_LISTA;
+    }
+
+    private void prepararListagem(Model model, String termo, Long categoriaId, VideoStatus status) {
+        model.addAttribute("videos", videoService.listar(termo, categoriaId, status));
+        model.addAttribute("indicadores", videoService.indicadores());
+        model.addAttribute("categorias", categoriaRepository.findAll());
+        model.addAttribute("statuses", VideoStatus.values());
+        model.addAttribute("termo", termo);
+        model.addAttribute("categoriaId", categoriaId);
+        model.addAttribute("status", status);
+    }
+
+    private void abrirFormulario(Model model, VideoForm form, Video video) {
+        model.addAttribute("form", form);
+        model.addAttribute("edicao", video != null);
+        model.addAttribute("video", video);
+        model.addAttribute("origens", OrigemVideo.values());
     }
 }

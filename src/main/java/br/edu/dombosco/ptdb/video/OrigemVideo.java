@@ -1,14 +1,13 @@
 package br.edu.dombosco.ptdb.video;
 
-public enum VideoStatus {
+public enum OrigemVideo {
 
-    AGUARDANDO_AVALIACAO("Aguardando avaliação"),
-    APROVADO("Aprovado"),
-    REPROVADO("Reprovado");
+    LINK("Link externo"),
+    ARQUIVO("Arquivo enviado");
 
     private final String descricao;
 
-    VideoStatus(String descricao) {
+    OrigemVideo(String descricao) {
         this.descricao = descricao;
     }
 

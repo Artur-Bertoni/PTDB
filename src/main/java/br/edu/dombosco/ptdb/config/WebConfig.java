@@ -5,13 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Configuracao web MVC.
- *
- * <p>Registra o {@link AdministradorInterceptor} para proteger as rotas
- * administrativas ({@code /admin/**}), conforme a regra do RF06 de restringir
- * o gerenciamento de videos ao Administrador.
- */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

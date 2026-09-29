@@ -15,15 +15,6 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Entidade Video (RF06 / RF10).
- *
- * <p>Campos obrigatorios definidos na regra de negocio do RF06: titulo,
- * descricao, categoria, arquivo do video e data de publicacao.
- *
- * <p>A exclusao e sempre logica ({@link #ativo} = false), preservando a
- * integridade referencial com favoritos (RF07) e avaliacao (RF08).
- */
 @Entity
 @Table(name = "video")
 public class Video {
@@ -42,17 +33,18 @@ public class Video {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
-    /** Nome do arquivo de video armazenado (upload). Obrigatorio. */
-    @Column(name = "arquivo_video", nullable = false)
-    private String arquivoVideo;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "origem_video", nullable = false, length = 10)
+    private OrigemVideo origemVideo;
 
-    /** Nome original do arquivo de video, para exibicao. */
-    @Column(name = "arquivo_video_original")
-    private String arquivoVideoOriginal;
+    @Column(name = "arquivo_link", nullable = false, length = 500)
+    private String arquivoLink;
 
-    /** Nome do arquivo de imagem de capa armazenado (upload). Opcional. */
-    @Column(name = "thumbnail")
-    private String thumbnail;
+    @Column(name = "nome_arquivo_original")
+    private String nomeArquivoOriginal;
+
+    @Column(name = "imagem_capa")
+    private String imagemCapa;
 
     @Column(name = "data_publicacao", nullable = false)
     private LocalDate dataPublicacao;
@@ -61,20 +53,29 @@ public class Video {
     @Column(nullable = false, length = 30)
     private VideoStatus status = VideoStatus.AGUARDANDO_AVALIACAO;
 
-    /** Flag de exclusao logica (inativacao). RF06: exclusao nunca e fisica. */
+    @Column(name = "data_cadastro", nullable = false, updatable = false)
+    private LocalDateTime dataCadastro;
+
+    @Column(name = "data_atualizacao")
+    private LocalDateTime dataAtualizacao;
+
     @Column(nullable = false)
     private boolean ativo = true;
-
-    @Column(name = "criado_em", nullable = false, updatable = false)
-    private LocalDateTime criadoEm;
-
-    @Column(name = "atualizado_em")
-    private LocalDateTime atualizadoEm;
 
     public Video() {
     }
 
-    // getters / setters
+    public boolean isArquivo() {
+        return origemVideo == OrigemVideo.ARQUIVO;
+    }
+
+    public boolean isLink() {
+        return origemVideo == OrigemVideo.LINK;
+    }
+
+    public String getCapaExterna() {
+        return isLink() ? LinkVideo.capaYoutube(arquivoLink) : null;
+    }
 
     public Long getId() {
         return id;
@@ -108,28 +109,36 @@ public class Video {
         this.categoria = categoria;
     }
 
-    public String getArquivoVideo() {
-        return arquivoVideo;
+    public OrigemVideo getOrigemVideo() {
+        return origemVideo;
     }
 
-    public void setArquivoVideo(String arquivoVideo) {
-        this.arquivoVideo = arquivoVideo;
+    public void setOrigemVideo(OrigemVideo origemVideo) {
+        this.origemVideo = origemVideo;
     }
 
-    public String getArquivoVideoOriginal() {
-        return arquivoVideoOriginal;
+    public String getArquivoLink() {
+        return arquivoLink;
     }
 
-    public void setArquivoVideoOriginal(String arquivoVideoOriginal) {
-        this.arquivoVideoOriginal = arquivoVideoOriginal;
+    public void setArquivoLink(String arquivoLink) {
+        this.arquivoLink = arquivoLink;
     }
 
-    public String getThumbnail() {
-        return thumbnail;
+    public String getNomeArquivoOriginal() {
+        return nomeArquivoOriginal;
     }
 
-    public void setThumbnail(String thumbnail) {
-        this.thumbnail = thumbnail;
+    public void setNomeArquivoOriginal(String nomeArquivoOriginal) {
+        this.nomeArquivoOriginal = nomeArquivoOriginal;
+    }
+
+    public String getImagemCapa() {
+        return imagemCapa;
+    }
+
+    public void setImagemCapa(String imagemCapa) {
+        this.imagemCapa = imagemCapa;
     }
 
     public LocalDate getDataPublicacao() {
@@ -148,27 +157,27 @@ public class Video {
         this.status = status;
     }
 
+    public LocalDateTime getDataCadastro() {
+        return dataCadastro;
+    }
+
+    public void setDataCadastro(LocalDateTime dataCadastro) {
+        this.dataCadastro = dataCadastro;
+    }
+
+    public LocalDateTime getDataAtualizacao() {
+        return dataAtualizacao;
+    }
+
+    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+        this.dataAtualizacao = dataAtualizacao;
+    }
+
     public boolean isAtivo() {
         return ativo;
     }
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
-    }
-
-    public LocalDateTime getAtualizadoEm() {
-        return atualizadoEm;
-    }
-
-    public void setAtualizadoEm(LocalDateTime atualizadoEm) {
-        this.atualizadoEm = atualizadoEm;
     }
 }

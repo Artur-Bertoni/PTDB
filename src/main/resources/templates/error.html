@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${status == 403} ? 'Acesso restrito' : (${status == 404} ? 'Página não encontrada' : 'Erro'))}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('')}"></aside>
+
+    <main class="conteudo conteudo--estreito">
+        <section class="painel erro" th:switch="${status}">
+            <span class="erro__codigo" th:text="${status}">500</span>
+
+            <th:block th:case="403">
+                <h1>Acesso restrito</h1>
+                <p class="pagina__descricao">Esta área é exclusiva para usuários com permissão de administrador.</p>
+            </th:block>
+
+            <th:block th:case="404">
+                <h1>Página não encontrada</h1>
+                <p class="pagina__descricao">O endereço acessado não existe ou o conteúdo não está disponível.</p>
+            </th:block>
+
+            <th:block th:case="*">
+                <h1>Algo deu errado</h1>
+                <p class="pagina__descricao">Ocorreu um erro inesperado. Tente novamente em instantes.</p>
+            </th:block>
+
+            <a class="botao botao--primario" th:href="@{/}">Voltar ao início</a>
+        </section>
+    </main>
+</div>
+</body>
+</html>

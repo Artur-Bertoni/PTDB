@@ -16,21 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Servico de armazenamento de arquivos de upload do RF06 (arquivo do video
- * e imagem de capa).
- *
- * <p>Os arquivos sao gravados em disco em subpastas ({@link #PASTA_VIDEOS} e
- * {@link #PASTA_THUMBNAILS}) sob o diretorio configurado em
- * {@code ptdb.storage.location}. No banco (RF10) e persistido apenas o nome
- * do arquivo gerado, mantendo o conteudo audiovisual fora da base
- * relacional (RNF05).
- */
 @Service
 public class FileStorageService {
 
     public static final String PASTA_VIDEOS = "videos";
-    public static final String PASTA_THUMBNAILS = "thumbnails";
+    public static final String PASTA_CAPAS = "capas";
 
     private final Path raiz;
 
@@ -42,25 +32,19 @@ public class FileStorageService {
     public void init() {
         try {
             Files.createDirectories(raiz.resolve(PASTA_VIDEOS));
-            Files.createDirectories(raiz.resolve(PASTA_THUMBNAILS));
+            Files.createDirectories(raiz.resolve(PASTA_CAPAS));
         } catch (IOException e) {
-            throw new StorageException("Nao foi possivel inicializar o diretorio de uploads.", e);
+            throw new StorageException("Não foi possível inicializar o diretório de uploads.", e);
         }
     }
 
-    /**
-     * Grava um arquivo de upload na subpasta informada, validando que o
-     * tipo de conteudo comeca pelo prefixo esperado (ex.: "video/", "image/").
-     *
-     * @return o nome do arquivo gerado (a ser persistido no banco).
-     */
     public String armazenar(MultipartFile arquivo, String subpasta, String prefixoTipoEsperado) {
         if (arquivo == null || arquivo.isEmpty()) {
-            throw new StorageException("Arquivo vazio ou nao informado.");
+            throw new StorageException("Arquivo vazio ou não informado.");
         }
         String contentType = arquivo.getContentType();
         if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith(prefixoTipoEsperado)) {
-            throw new StorageException("Tipo de arquivo invalido. Esperado: " + prefixoTipoEsperado + "*");
+            throw new StorageException("Tipo de arquivo inválido. Esperado: " + prefixoTipoEsperado + "*");
         }
 
         String nomeOriginal = StringUtils.cleanPath(
@@ -70,9 +54,9 @@ public class FileStorageService {
                 + (extensao != null && !extensao.isBlank() ? "." + extensao : "");
 
         Path destino = raiz.resolve(subpasta).resolve(nomeGerado).normalize();
-        // Protege contra path traversal.
+
         if (!destino.getParent().equals(raiz.resolve(subpasta))) {
-            throw new StorageException("Caminho de destino invalido.");
+            throw new StorageException("Caminho de destino inválido.");
         }
 
         try (InputStream in = arquivo.getInputStream()) {
@@ -83,27 +67,22 @@ public class FileStorageService {
         return nomeGerado;
     }
 
-    /**
-     * Carrega um arquivo previamente armazenado como {@link Resource} para
-     * download/streaming.
-     */
     public Resource carregar(String subpasta, String nomeArquivo) {
         try {
             Path caminho = raiz.resolve(subpasta).resolve(nomeArquivo).normalize();
             if (!caminho.getParent().equals(raiz.resolve(subpasta))) {
-                throw new StorageException("Caminho de arquivo invalido.");
+                throw new StorageException("Caminho de arquivo inválido.");
             }
             Resource resource = new UrlResource(caminho.toUri());
             if (!resource.exists() || !resource.isReadable()) {
-                throw new StorageException("Arquivo nao encontrado: " + nomeArquivo);
+                throw new StorageException("Arquivo não encontrado: " + nomeArquivo);
             }
             return resource;
         } catch (java.net.MalformedURLException e) {
-            throw new StorageException("Arquivo nao encontrado: " + nomeArquivo, e);
+            throw new StorageException("Arquivo não encontrado: " + nomeArquivo, e);
         }
     }
 
-    /** Remove um arquivo do disco (uso opcional; a exclusao do RF06 e logica). */
     public void remover(String subpasta, String nomeArquivo) {
         if (nomeArquivo == null || nomeArquivo.isBlank()) {
             return;
