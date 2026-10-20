@@ -1,70 +1,120 @@
 package br.edu.dombosco.ptdb.painel;
 
+import br.edu.dombosco.ptdb.avaliacao.Avaliacao;
+import br.edu.dombosco.ptdb.avaliacao.AvaliacaoRepository;
+import br.edu.dombosco.ptdb.avaliacao.DecisaoAvaliacao;
+import br.edu.dombosco.ptdb.categoria.Categoria;
 import br.edu.dombosco.ptdb.categoria.CategoriaRepository;
+import br.edu.dombosco.ptdb.faq.ItemFaqRepository;
 import br.edu.dombosco.ptdb.video.Video;
 import br.edu.dombosco.ptdb.video.VideoRepository;
 import br.edu.dombosco.ptdb.video.VideoStatus;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PainelService {
 
-    static final int LIMITE_LISTAS = 5;
+    public static final int LIMITE_LISTAS = 5;
 
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm");
 
     private final VideoRepository videoRepository;
     private final CategoriaRepository categoriaRepository;
-    private final Clock clock;
+    private final AvaliacaoRepository avaliacaoRepository;
+    private final ItemFaqRepository itemFaqRepository;
 
-    public PainelService(VideoRepository videoRepository, CategoriaRepository categoriaRepository, Clock clock) {
+    public PainelService(VideoRepository videoRepository,
+                         CategoriaRepository categoriaRepository,
+                         AvaliacaoRepository avaliacaoRepository,
+                         ItemFaqRepository itemFaqRepository) {
         this.videoRepository = videoRepository;
         this.categoriaRepository = categoriaRepository;
-        this.clock = clock;
+        this.avaliacaoRepository = avaliacaoRepository;
+        this.itemFaqRepository = itemFaqRepository;
     }
 
-    @Transactional(readOnly = true)
     public IndicadoresPainel carregarIndicadores() {
-        return new IndicadoresPainel(
-                videoRepository.countByAtivoTrue(),
-                videoRepository.countByAtivoTrueAndDataCadastroGreaterThanEqual(LocalDateTime.now(clock).minusDays(7)),
-                videoRepository.countByAtivoTrueAndStatus(VideoStatus.AGUARDANDO_AVALIACAO),
-                categoriaRepository.count(),
-                categoriaRepository.contarSemVideosNoStatus(VideoStatus.APROVADO));
+        List<Video> ativos = videoRepository.findByAtivoTrueOrderByDataPublicacaoDescIdDesc();
+        LocalDateTime seteDiasAtras = LocalDateTime.now().minusDays(7);
+
+        long novosNaSemana = 0;
+        for (Video video : ativos) {
+            if (!video.getDataCadastro().isBefore(seteDiasAtras)) {
+                novosNaSemana++;
+            }
+        }
+
+        List<Video> aprovados = videoRepository.findByAtivoTrueAndStatus(VideoStatus.APROVADO);
+        long categoriasSemAprovados = 0;
+        for (Categoria categoria : categoriaRepository.findByAtivaTrueOrderByNomeAsc()) {
+            boolean temAprovado = false;
+            for (Video video : aprovados) {
+                if (video.getCategoria().getId().equals(categoria.getId())) {
+                    temAprovado = true;
+                }
+            }
+            if (!temAprovado) {
+                categoriasSemAprovados++;
+            }
+        }
+
+        IndicadoresPainel indicadores = new IndicadoresPainel();
+        indicadores.setVideosCadastrados(ativos.size());
+        indicadores.setVideosNovosNaSemana(novosNaSemana);
+        indicadores.setVideosAguardando(videoRepository.countByAtivoTrueAndStatus(VideoStatus.AGUARDANDO_AVALIACAO));
+        indicadores.setCategorias(categoriaRepository.countByAtivaTrue());
+        indicadores.setCategoriasSemAprovados(categoriasSemAprovados);
+        indicadores.setItensFaq(itemFaqRepository.count());
+        return indicadores;
     }
 
-    @Transactional(readOnly = true)
     public List<AtividadeRecente> atividadesRecentes() {
-        LocalDate hoje = LocalDate.now(clock);
-        return videoRepository.buscarMaisRecentes(PageRequest.of(0, LIMITE_LISTAS)).stream()
-                .map(video -> paraAtividade(video, hoje))
-                .toList();
+        List<AtividadeRecente> todas = new ArrayList<>();
+        for (Video video : videoRepository.findAll()) {
+            todas.add(new AtividadeRecente(video.getTitulo(), tipoDoVideo(video), ultimaAlteracao(video)));
+        }
+        for (Avaliacao avaliacao : avaliacaoRepository.findTop5ByOrderByDataDesc()) {
+            todas.add(new AtividadeRecente(avaliacao.getVideo().getTitulo(), tipoDaAvaliacao(avaliacao), avaliacao.getData()));
+        }
+
+        LocalDate hoje = LocalDate.now();
+        List<AtividadeRecente> recentes = new ArrayList<>();
+        while (!todas.isEmpty() && recentes.size() < LIMITE_LISTAS) {
+            AtividadeRecente maisRecente = todas.get(0);
+            for (AtividadeRecente atividade : todas) {
+                if (atividade.getMomento().isAfter(maisRecente.getMomento())) {
+                    maisRecente = atividade;
+                }
+            }
+            todas.remove(maisRecente);
+            maisRecente.setQuando(formatarMomento(maisRecente.getMomento(), hoje));
+            recentes.add(maisRecente);
+        }
+        return recentes;
     }
 
-    @Transactional(readOnly = true)
     public List<ItemFilaAvaliacao> filaDeAvaliacao() {
-        LocalDate hoje = LocalDate.now(clock);
-        return videoRepository
-                .buscarAtivosPorStatusEmOrdemDeEnvio(VideoStatus.AGUARDANDO_AVALIACAO, PageRequest.of(0, LIMITE_LISTAS))
-                .stream()
-                .map(video -> new ItemFilaAvaliacao(
-                        video.getId(),
-                        video.getTitulo(),
-                        video.getCategoria().getNome(),
-                        formatarEnvio(ultimaAlteracao(video).toLocalDate(), hoje)))
-                .toList();
+        LocalDate hoje = LocalDate.now();
+        List<ItemFilaAvaliacao> itens = new ArrayList<>();
+        List<Video> fila = videoRepository.findByAtivoTrueAndStatusOrderByDataCadastroAsc(VideoStatus.AGUARDANDO_AVALIACAO);
+        for (Video video : fila) {
+            if (itens.size() == LIMITE_LISTAS) {
+                break;
+            }
+            String enviado = formatarEnvio(ultimaAlteracao(video).toLocalDate(), hoje);
+            itens.add(new ItemFilaAvaliacao(video.getId(), video.getTitulo(), video.getCategoria().getNome(), enviado));
+        }
+        return itens;
     }
 
-    static String formatarMomento(LocalDateTime momento, LocalDate hoje) {
+    public static String formatarMomento(LocalDateTime momento, LocalDate hoje) {
         long dias = ChronoUnit.DAYS.between(momento.toLocalDate(), hoje);
         if (dias == 0) {
             return "Hoje, " + momento.format(HORA);
@@ -75,7 +125,7 @@ public class PainelService {
         return momento.format(DATA_HORA);
     }
 
-    static String formatarEnvio(LocalDate envio, LocalDate hoje) {
+    public static String formatarEnvio(LocalDate envio, LocalDate hoje) {
         long dias = ChronoUnit.DAYS.between(envio, hoje);
         if (dias <= 0) {
             return "enviado hoje";
@@ -86,19 +136,30 @@ public class PainelService {
         return "enviado há " + dias + " dias";
     }
 
-    private static AtividadeRecente paraAtividade(Video video, LocalDate hoje) {
-        TipoAtividade tipo;
+    private TipoAtividade tipoDoVideo(Video video) {
         if (!video.isAtivo()) {
-            tipo = TipoAtividade.EXCLUSAO;
-        } else if (video.getDataAtualizacao() != null) {
-            tipo = TipoAtividade.EDICAO;
-        } else {
-            tipo = TipoAtividade.CADASTRO;
+            return TipoAtividade.EXCLUSAO;
         }
-        return new AtividadeRecente(video.getTitulo(), tipo, formatarMomento(ultimaAlteracao(video), hoje));
+        if (video.getDataAtualizacao() != null) {
+            return TipoAtividade.EDICAO;
+        }
+        return TipoAtividade.CADASTRO;
     }
 
-    private static LocalDateTime ultimaAlteracao(Video video) {
-        return video.getDataAtualizacao() != null ? video.getDataAtualizacao() : video.getDataCadastro();
+    private TipoAtividade tipoDaAvaliacao(Avaliacao avaliacao) {
+        if (avaliacao.getDecisao() == DecisaoAvaliacao.APROVADO) {
+            return TipoAtividade.APROVACAO;
+        }
+        if (avaliacao.getDecisao() == DecisaoAvaliacao.REPROVADO) {
+            return TipoAtividade.REPROVACAO;
+        }
+        return TipoAtividade.AJUSTES;
+    }
+
+    private LocalDateTime ultimaAlteracao(Video video) {
+        if (video.getDataAtualizacao() != null) {
+            return video.getDataAtualizacao();
+        }
+        return video.getDataCadastro();
     }
 }

@@ -3,6 +3,7 @@ package br.edu.dombosco.ptdb.video;
 public enum VideoStatus {
 
     AGUARDANDO_AVALIACAO("Aguardando avaliação"),
+    AJUSTES_SOLICITADOS("Ajustes solicitados"),
     APROVADO("Aprovado"),
     REPROVADO("Reprovado");
 

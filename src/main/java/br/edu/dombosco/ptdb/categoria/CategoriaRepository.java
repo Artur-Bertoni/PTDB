@@ -1,19 +1,17 @@
 package br.edu.dombosco.ptdb.categoria;
 
-import br.edu.dombosco.ptdb.video.VideoStatus;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
-    boolean existsByNomeIgnoreCase(String nome);
+    List<Categoria> findByAtivaTrueOrderByNomeAsc();
 
-    @Query("""
-            select count(c) from Categoria c
-            where not exists (
-                select 1 from Video v
-                where v.categoria = c and v.ativo = true and v.status = :status)
-            """)
-    long contarSemVideosNoStatus(@Param("status") VideoStatus status);
+    Categoria findByIdAndAtivaTrue(Long id);
+
+    Categoria findByNomeIgnoreCase(String nome);
+
+    boolean existsByIdAndAtivaTrue(Long id);
+
+    long countByAtivaTrue();
 }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Perguntas frequentes')}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('faq')}"></aside>
+
+    <main class="conteudo">
+
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Perguntas frequentes</h1>
+                <p class="pagina__descricao">Dúvidas comuns sobre o portal e os conteúdos disponíveis.</p>
+            </div>
+            <a class="botao botao--secundario" th:if="${session.usuarioLogado != null and session.usuarioLogado.administrador}"
+               th:href="@{/admin/faq}">Gerenciar FAQ</a>
+        </header>
+
+        <form class="busca" th:action="@{/faq}" method="get" role="search">
+            <label class="visualmente-oculto" for="termo">Buscar uma dúvida</label>
+            <input class="campo__input" type="search" id="termo" name="termo" th:value="${termo}"
+                   placeholder="Buscar uma dúvida...">
+            <input type="hidden" name="tema" th:if="${tema != null}" th:value="${tema}">
+            <button class="botao botao--primario" type="submit">Buscar</button>
+        </form>
+
+        <div class="faq">
+            <section class="faq__itens" aria-label="Perguntas">
+                <div class="vazio" th:if="${#maps.isEmpty(grupos)}">
+                    <strong>Nenhuma pergunta encontrada.</strong>
+                    Tente outros termos ou <a th:href="@{/faq}">veja todas as perguntas</a>.
+                </div>
+
+                <div class="faq__grupo" th:each="g : ${grupos}">
+                    <h2 class="faq__tema" th:text="${g.key}">Tema</h2>
+                    <details class="acordeao" th:each="item : ${g.value}"
+                             th:open="${termo != null and !#strings.isEmpty(termo)}">
+                        <summary class="acordeao__pergunta" th:text="${item.pergunta}">Pergunta</summary>
+                        <p class="acordeao__resposta" th:text="${item.resposta}">Resposta</p>
+                    </details>
+                </div>
+            </section>
+
+            <aside class="faq__lateral">
+                <div class="painel">
+                    <h2 class="faq__lateral-titulo">Categorias do FAQ</h2>
+                    <div class="chips">
+                        <a class="chip" th:href="@{/faq}" th:classappend="${tema == null} ? 'chip--ativo'">Todas</a>
+                        <a class="chip" th:each="t : ${temas}" th:href="@{/faq(tema=${t})}"
+                           th:classappend="${t == tema} ? 'chip--ativo'" th:text="${t}">Tema</a>
+                    </div>
+                </div>
+                <div class="painel">
+                    <h2 class="faq__lateral-titulo">Não encontrou sua dúvida?</h2>
+                    <p class="pagina__descricao">
+                        As perguntas e respostas são mantidas pela equipe do portal. Novos itens são adicionados
+                        sempre que dúvidas frequentes surgem entre os alunos.
+                    </p>                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+</body>
+</html>

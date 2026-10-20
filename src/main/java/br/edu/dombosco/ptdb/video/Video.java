@@ -1,11 +1,11 @@
 package br.edu.dombosco.ptdb.video;
 
 import br.edu.dombosco.ptdb.categoria.Categoria;
+import br.edu.dombosco.ptdb.usuario.Usuario;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,9 +29,16 @@ public class Video {
     @Column(nullable = false, length = 4000)
     private String descricao;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @Column(nullable = false, length = 150)
+    private String autor;
+
+    @ManyToOne(optional = false)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
+
+    @ManyToOne
+    @JoinColumn(name = "cadastrado_por_id")
+    private Usuario cadastradoPor;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "origem_video", nullable = false, length = 10)
@@ -77,6 +84,14 @@ public class Video {
         return isLink() ? LinkVideo.capaYoutube(arquivoLink) : null;
     }
 
+    public String getEmbed() {
+        return isLink() ? LinkVideo.embed(arquivoLink) : null;
+    }
+
+    public boolean isPublicado() {
+        return ativo && status == VideoStatus.APROVADO;
+    }
+
     public Long getId() {
         return id;
     }
@@ -101,12 +116,28 @@ public class Video {
         this.descricao = descricao;
     }
 
+    public String getAutor() {
+        return autor;
+    }
+
+    public void setAutor(String autor) {
+        this.autor = autor;
+    }
+
     public Categoria getCategoria() {
         return categoria;
     }
 
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
+    }
+
+    public Usuario getCadastradoPor() {
+        return cadastradoPor;
+    }
+
+    public void setCadastradoPor(Usuario cadastradoPor) {
+        this.cadastradoPor = cadastradoPor;
     }
 
     public OrigemVideo getOrigemVideo() {

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Gerenciar FAQ')}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('faq-admin')}"></aside>
+
+    <main class="conteudo">
+
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Gerenciar FAQ</h1>
+                <p class="pagina__descricao">Inclua, edite e remova as perguntas frequentes do portal.</p>
+            </div>
+            <div class="pagina__acoes">
+                <a class="botao botao--secundario" th:href="@{/faq}">Ver página do FAQ</a>
+                <a class="botao botao--primario" th:href="@{/admin/faq/novo}">+ Nova pergunta</a>
+            </div>
+        </header>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <form class="painel filtros" th:action="@{/admin/faq}" method="get" role="search">
+            <div class="campo campo--busca">
+                <label class="campo__rotulo" for="termo">Buscar</label>
+                <input class="campo__input" type="search" id="termo" name="termo" th:value="${termo}"
+                       placeholder="Buscar na pergunta, resposta ou tema...">
+            </div>
+            <div class="filtros__acoes">
+                <button class="botao botao--primario" type="submit">Buscar</button>
+                <a class="botao botao--secundario" th:href="@{/admin/faq}">Limpar</a>
+            </div>
+        </form>
+
+        <section class="painel painel--tabela" aria-labelledby="titulo-lista">
+            <div class="painel__cabecalho">
+                <h2 id="titulo-lista">Perguntas cadastradas</h2>
+                <span class="contador"
+                      th:text="${#lists.size(itens) == 1} ? '1 pergunta' : ${#lists.size(itens)} + ' perguntas'"></span>
+            </div>
+
+            <div class="vazio" th:if="${#lists.isEmpty(itens)}">
+                <strong>Nenhuma pergunta encontrada.</strong>
+                Ajuste a busca ou cadastre uma nova pergunta.
+            </div>
+
+            <table class="tabela" th:unless="${#lists.isEmpty(itens)}">
+                <thead>
+                <tr>
+                    <th scope="col">Pergunta</th>
+                    <th scope="col">Tema</th>
+                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${itens}">
+                    <td>
+                        <div class="tabela__video-texto">
+                            <strong th:text="${i.pergunta}">Pergunta</strong>
+                            <span class="texto-limitado" th:text="${i.resposta}">Resposta</span>
+                        </div>
+                    </td>
+                    <td data-rotulo="Tema" th:text="${i.tema}">Tema</td>
+                    <td class="tabela__acoes">
+                        <a class="botao botao--secundario botao--pequeno"
+                           th:href="@{/admin/faq/{id}/editar(id=${i.id})}">Editar</a>
+                        <form th:action="@{/admin/faq/{id}/excluir(id=${i.id})}" method="post"
+                              onsubmit="return confirm('Confirma a exclusão desta pergunta?');">
+                            <button class="botao botao--perigo botao--pequeno" type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+
+<dialog id="modal-faq" class="modal" th:if="${form != null}"
+        data-abrir th:data-fechar="@{/admin/faq}" aria-labelledby="modal-faq-titulo">
+    <form class="modal__formulario"
+          th:action="${edicao} ? @{/admin/faq/{id}(id=${form.id})} : @{/admin/faq}"
+          th:object="${form}" method="post" novalidate>
+
+        <header class="modal__cabecalho">
+            <h2 id="modal-faq-titulo" th:text="${edicao} ? 'Editar pergunta' : 'Nova pergunta'">Nova pergunta</h2>
+            <a class="modal__fechar" th:href="@{/admin/faq}" aria-label="Fechar">&times;</a>
+        </header>
+
+        <div class="modal__corpo">
+            <div class="alerta alerta--erro" role="alert" th:if="${#fields.hasErrors('*')}">
+                Não foi possível salvar. Revise os campos destacados.
+            </div>
+            <div class="formulario__grade">
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="pergunta">Pergunta <span class="campo__obrigatorio">*</span></label>
+                    <input class="campo__input" type="text" th:field="*{pergunta}" maxlength="300"
+                           th:errorclass="campo__input--erro">
+                    <span class="campo__erro" th:if="${#fields.hasErrors('pergunta')}" th:errors="*{pergunta}"></span>
+                </div>
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="resposta">Resposta <span class="campo__obrigatorio">*</span></label>
+                    <textarea class="campo__input" th:field="*{resposta}" rows="5" maxlength="4000"
+                              th:errorclass="campo__input--erro"></textarea>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('resposta')}" th:errors="*{resposta}"></span>
+                </div>
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="categoriaTema">Categoria / tema</label>
+                    <input class="campo__input" type="text" th:field="*{categoriaTema}" maxlength="100"
+                           list="temas-existentes" placeholder="Ex.: Conta e acesso"
+                           th:errorclass="campo__input--erro">
+                    <datalist id="temas-existentes">
+                        <option th:each="t : ${temas}" th:value="${t}"></option>
+                    </datalist>
+                    <span class="campo__ajuda">Opcional. Perguntas sem tema aparecem em "Geral".</span>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('categoriaTema')}" th:errors="*{categoriaTema}"></span>
+                </div>
+            </div>
+        </div>
+
+        <footer class="modal__rodape">
+            <a class="botao botao--secundario" th:href="@{/admin/faq}">Cancelar</a>
+            <button class="botao botao--primario" type="submit"
+                    th:text="${edicao} ? 'Salvar alterações' : 'Salvar pergunta'">Salvar pergunta</button>
+        </footer>
+    </form>
+</dialog>
+
+</body>
+</html>

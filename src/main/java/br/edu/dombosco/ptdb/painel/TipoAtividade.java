@@ -4,7 +4,10 @@ public enum TipoAtividade {
 
     CADASTRO("foi cadastrado e enviado para avaliação"),
     EDICAO("foi editado e reenviado para avaliação"),
-    EXCLUSAO("foi excluído");
+    EXCLUSAO("foi excluído"),
+    APROVACAO("foi aprovado"),
+    REPROVACAO("foi reprovado"),
+    AJUSTES("teve ajustes solicitados");
 
     private final String descricao;
 

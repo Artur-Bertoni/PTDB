@@ -26,3 +26,31 @@ document.querySelectorAll('[data-alternador]').forEach((grupo) => {
     grupo.addEventListener('change', atualizar);
     atualizar();
 });
+
+document.querySelectorAll('form.alternancia').forEach((formulario) => {
+    formulario.addEventListener('submit', (evento) => {
+        evento.preventDefault();
+        const botao = formulario.querySelector('button');
+        botao.disabled = true;
+        fetch(formulario.action, { method: 'POST', redirect: 'manual' })
+            .then((resposta) => {
+                if (resposta.type === 'opaqueredirect' || resposta.ok) {
+                    alternarFavorito(formulario, botao);
+                }
+            })
+            .finally(() => {
+                botao.disabled = false;
+            });
+    });
+});
+
+function alternarFavorito(formulario, botao) {
+    const marcado = !botao.classList.contains('favorito--marcado');
+    botao.classList.toggle('favorito--marcado', marcado);
+    botao.setAttribute('aria-pressed', marcado);
+
+    const listaFavoritos = formulario.closest('[data-lista-favoritos]');
+    if (listaFavoritos && !marcado) {
+        formulario.closest('.card-video').remove();
+    }
+}

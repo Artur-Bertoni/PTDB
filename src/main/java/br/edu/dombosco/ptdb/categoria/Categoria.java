@@ -21,6 +21,9 @@ public class Categoria {
     @Column(length = 255)
     private String descricao;
 
+    @Column(nullable = false)
+    private boolean ativa = true;
+
     public Categoria() {
     }
 
@@ -51,5 +54,13 @@ public class Categoria {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public boolean isAtiva() {
+        return ativa;
+    }
+
+    public void setAtiva(boolean ativa) {
+        this.ativa = ativa;
     }
 }

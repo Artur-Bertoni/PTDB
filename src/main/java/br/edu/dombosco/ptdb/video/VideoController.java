@@ -1,7 +1,9 @@
 package br.edu.dombosco.ptdb.video;
 
-import br.edu.dombosco.ptdb.categoria.CategoriaRepository;
-import jakarta.validation.Valid;
+import br.edu.dombosco.ptdb.categoria.CategoriaService;
+import br.edu.dombosco.ptdb.security.UsuarioLogado;
+import br.edu.dombosco.ptdb.security.UsuarioSessao;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,11 +23,11 @@ public class VideoController {
     private static final String REDIRECT_LISTA = "redirect:/admin/videos";
 
     private final VideoService videoService;
-    private final CategoriaRepository categoriaRepository;
+    private final CategoriaService categoriaService;
 
-    public VideoController(VideoService videoService, CategoriaRepository categoriaRepository) {
+    public VideoController(VideoService videoService, CategoriaService categoriaService) {
         this.videoService = videoService;
-        this.categoriaRepository = categoriaRepository;
+        this.categoriaService = categoriaService;
     }
 
     @GetMapping
@@ -45,8 +47,9 @@ public class VideoController {
     }
 
     @PostMapping
-    public String criar(@Valid @ModelAttribute("form") VideoForm form,
+    public String criar(@ModelAttribute("form") VideoForm form,
                         BindingResult result,
+                        HttpSession session,
                         Model model,
                         RedirectAttributes redirect) {
         videoService.validar(form, null, result);
@@ -55,7 +58,8 @@ public class VideoController {
             abrirFormulario(model, form, null);
             return VIEW;
         }
-        videoService.criar(form);
+        UsuarioLogado usuario = UsuarioSessao.buscar(session);
+        videoService.criar(form, usuario.getId());
         redirect.addFlashAttribute("mensagem", "Vídeo cadastrado. Ele ficará aguardando avaliação.");
         return REDIRECT_LISTA;
     }
@@ -67,6 +71,7 @@ public class VideoController {
         form.setId(video.getId());
         form.setTitulo(video.getTitulo());
         form.setDescricao(video.getDescricao());
+        form.setAutor(video.getAutor());
         form.setCategoriaId(video.getCategoria().getId());
         form.setDataPublicacao(video.getDataPublicacao());
         form.setOrigem(video.getOrigemVideo());
@@ -80,7 +85,7 @@ public class VideoController {
 
     @PostMapping("/{id}")
     public String atualizar(@PathVariable Long id,
-                            @Valid @ModelAttribute("form") VideoForm form,
+                            @ModelAttribute("form") VideoForm form,
                             BindingResult result,
                             Model model,
                             RedirectAttributes redirect) {
@@ -107,7 +112,7 @@ public class VideoController {
     private void prepararListagem(Model model, String termo, Long categoriaId, VideoStatus status) {
         model.addAttribute("videos", videoService.listar(termo, categoriaId, status));
         model.addAttribute("indicadores", videoService.indicadores());
-        model.addAttribute("categorias", categoriaRepository.findAll());
+        model.addAttribute("categorias", categoriaService.listarAtivas());
         model.addAttribute("statuses", VideoStatus.values());
         model.addAttribute("termo", termo);
         model.addAttribute("categoriaId", categoriaId);

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Gerenciar categorias')}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('categorias')}"></aside>
+
+    <main class="conteudo">
+
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Gerenciar categorias</h1>
+                <p class="pagina__descricao">Organize as categorias usadas na apresentação dos vídeos.</p>
+            </div>
+            <a class="botao botao--primario" th:href="@{/admin/categorias/nova}">+ Nova categoria</a>
+        </header>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <section class="painel painel--tabela" aria-labelledby="titulo-lista">
+            <div class="painel__cabecalho">
+                <h2 id="titulo-lista">Categorias ativas</h2>
+                <span class="contador"
+                      th:text="${#lists.size(categorias) == 1} ? '1 categoria' : ${#lists.size(categorias)} + ' categorias'"></span>
+            </div>
+
+            <div class="vazio" th:if="${#lists.isEmpty(categorias)}">
+                <strong>Nenhuma categoria cadastrada.</strong>
+                Cadastre uma categoria para poder organizar os vídeos.
+            </div>
+
+            <table class="tabela" th:unless="${#lists.isEmpty(categorias)}">
+                <thead>
+                <tr>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Vídeos aprovados</th>
+                    <th scope="col"><span class="visualmente-oculto">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${categorias}">
+                    <td>
+                        <div class="tabela__video-texto">
+                            <strong th:text="${c.nome}">Categoria</strong>
+                            <span th:text="${c.descricao}">Descrição</span>
+                        </div>
+                    </td>
+                    <td data-rotulo="Vídeos aprovados" th:text="${publicadosPorCategoria.getOrDefault(c.id, 0L)}">0</td>
+                    <td class="tabela__acoes">
+                        <a class="botao botao--secundario botao--pequeno"
+                           th:href="@{/admin/categorias/{id}/editar(id=${c.id})}">Editar</a>
+                        <form th:action="@{/admin/categorias/{id}/excluir(id=${c.id})}" method="post"
+                              onsubmit="return confirm('Confirma a exclusão desta categoria?');">
+                            <button class="botao botao--perigo botao--pequeno" type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+
+<dialog id="modal-categoria" class="modal modal--estreito" th:if="${form != null}"
+        data-abrir th:data-fechar="@{/admin/categorias}" aria-labelledby="modal-categoria-titulo">
+    <form class="modal__formulario"
+          th:action="${edicao} ? @{/admin/categorias/{id}(id=${form.id})} : @{/admin/categorias}"
+          th:object="${form}" method="post" novalidate>
+
+        <header class="modal__cabecalho">
+            <h2 id="modal-categoria-titulo" th:text="${edicao} ? 'Editar categoria' : 'Nova categoria'">Nova categoria</h2>
+            <a class="modal__fechar" th:href="@{/admin/categorias}" aria-label="Fechar">&times;</a>
+        </header>
+
+        <div class="modal__corpo">
+            <div class="formulario__grade">
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="nome">Nome <span class="campo__obrigatorio">*</span></label>
+                    <input class="campo__input" type="text" th:field="*{nome}" maxlength="100"
+                           th:errorclass="campo__input--erro">
+                    <span class="campo__erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+                </div>
+                <div class="campo campo--largo">
+                    <label class="campo__rotulo" for="descricao">Descrição</label>
+                    <textarea class="campo__input" th:field="*{descricao}" rows="3" maxlength="255"
+                              th:errorclass="campo__input--erro"></textarea>
+                    <span class="campo__ajuda">Aparece no catálogo quando a categoria é selecionada.</span>
+                    <span class="campo__erro" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></span>
+                </div>
+            </div>
+        </div>
+
+        <footer class="modal__rodape">
+            <a class="botao botao--secundario" th:href="@{/admin/categorias}">Cancelar</a>
+            <button class="botao botao--primario" type="submit"
+                    th:text="${edicao} ? 'Salvar alterações' : 'Salvar categoria'">Salvar categoria</button>
+        </footer>
+    </form>
+</dialog>
+
+</body>
+</html>

@@ -2,11 +2,13 @@
 
 Aplicação web do Portal de Treinamento Dom Bosco (Engenharia de Software B — 2026/2).
 
+Este repositório implementa os requisitos **RF06, RF07, RF08, RF09, RF11, RF12 e RF13**.
+
 ## Stack
 
 - Java 21+
-- Spring Boot 3.3.5 (Web MVC, Data JPA, Validation, Thymeleaf)
-- Banco H2 em memória (dev)
+- Spring Boot 3.3.5 (Web MVC, Data JPA, Thymeleaf)
+- Banco H2 em memória
 - Maven (via Maven Wrapper)
 
 ## Como executar
@@ -25,75 +27,68 @@ Alternativa manual (qualquer sistema com Java 21+):
 ./mvnw spring-boot:run
 ```
 
-Acesse `http://localhost:8080/` (redireciona para o painel administrativo em `/admin`).
+Acesse `http://localhost:8080/`.
 
-Console do H2 (dev): `http://localhost:8080/h2-console` — JDBC URL `jdbc:h2:mem:ptdb`, usuário `sa`, sem senha. O banco é recriado a cada execução.
+Console do H2: `http://localhost:8080/h2-console` — JDBC URL `jdbc:h2:mem:ptdb`, usuário `sa`, sem senha. O banco é recriado a cada execução.
 
-## Funcionalidades
+### Perfil provisório
 
-### Painel administrativo
+Login (RF01) e perfis (RF02) não fazem parte deste escopo. Para testar as telas de cada perfil, o portal começa como **Administrador** e o menu lateral tem a opção **Trocar perfil**, que alterna entre três usuários de teste:
 
-Tela inicial da área administrativa (`/admin`), restrita ao perfil Administrador:
+| Perfil | Usuário | Tela inicial |
+| --- | --- | --- |
+| Administrador | Administrador do Portal | `/admin` |
+| Avaliador | Rafael Lima | `/avaliacao` |
+| Aluno | Bruno Alves | `/catalogo` |
 
-- **Indicadores:** vídeos cadastrados (e quantos nos últimos 7 dias), vídeos aguardando avaliação, categorias ativas (e quantas ainda sem vídeos aprovados) e itens de FAQ.
-- **Módulos:** atalhos para o gerenciamento de vídeos, categorias e FAQ. Categorias e FAQ aparecem como "Em breve" até serem implementados.
-- **Atividade recente:** últimos cadastros, edições e exclusões de vídeos, derivados das datas de cadastro/atualização dos próprios vídeos. Aprovações e reprovações entram quando a avaliação existir.
-- **Fila de avaliação:** vídeos aguardando avaliação, do envio mais antigo para o mais recente.
+## Requisitos implementados
 
-O menu lateral traz Painel e Gerenciar vídeos; Categorias, FAQ, Configurações e Sair aparecem desabilitados até existirem.
+| Requisito | Onde |
+| --- | --- |
+| RF06 Manter vídeos | `/admin/videos`: cadastrar, consultar, editar e excluir vídeos (título, descrição, autor, categoria, link ou arquivo, capa e data de publicação). |
+| RF07 Favoritos | Coração nos cards e na página do vídeo (aluno) e página `/favoritos`. Sem duplicados; ao excluir o vídeo, os favoritos dele são removidos. |
+| RF08 Tela do avaliador | `/avaliacao`: fila, player, parecer obrigatório e decisão (aprovar, reprovar ou solicitar ajustes). Histórico em `/avaliacao/historico`. |
+| RF09 Área administrativa | `/admin` (indicadores, atividade recente e fila de avaliação), mais gestão de vídeos, categorias e FAQ. |
+| RF11 CSS | Folha única `static/css/ptdb.css`, responsiva. |
+| RF12 FAQ | `/faq` (acordeão agrupado por tema, busca e filtro por tema) e `/admin/faq` (cadastro pelo administrador). |
+| RF13 Vídeos por categoria | `/catalogo`: lista de categorias com a contagem de vídeos aprovados; ao escolher uma, mostra só os vídeos dela. |
 
-### Gerenciamento de vídeos
+### Fluxo de um vídeo
 
-CRUD de vídeos restrito ao perfil Administrador, em uma única tela: indicadores (total, aguardando, aprovados, reprovados), filtros, tabela de vídeos e formulário de cadastro/edição em modal.
+1. Administrador cadastra → **Aguardando avaliação**.
+2. Avaliador decide, sempre com parecer → **Aprovado**, **Reprovado** ou **Ajustes solicitados**.
+3. Só vídeos aprovados aparecem no catálogo e podem ser favoritados.
+4. Qualquer edição do administrador devolve o vídeo para **Aguardando avaliação**.
 
-- **Cadastro:** título, descrição, categoria, vídeo e data de publicação obrigatórios; imagem de capa opcional. O vídeo pode ser um **link externo** (YouTube, Vimeo, Google Drive etc., validado como `http`/`https`) ou um **arquivo enviado**. Para links do YouTube sem capa, a capa do próprio vídeo é usada. Todo vídeo cadastrado nasce com status "Aguardando avaliação".
-- **Consulta:** busca por título/descrição e filtros por categoria e status.
-- **Edição:** ao editar, o vídeo retorna para "Aguardando avaliação". O arquivo é mantido se nenhum novo for enviado; ao trocar arquivo por link, o arquivo antigo é removido.
-- **Exclusão:** sempre lógica (inativação), preservando a integridade referencial com favoritos e avaliações.
+### Acesso por perfil
 
-Visibilidade: vídeos aprovados e ativos podem ser vistos por todos; pendentes e reprovados apenas por administradores e avaliadores. A consulta de aprovados (`VideoService.listarAprovados`) já está disponível para o catálogo.
+| Rotas | Perfil |
+| --- | --- |
+| `/catalogo`, `/videos/**`, `/faq` | Todos |
+| `/favoritos/**` | Aluno |
+| `/avaliacao/**` | Avaliador |
+| `/admin/**` | Administrador |
 
-O banco guarda apenas os metadados; arquivos enviados ficam em disco, na pasta `uploads/` (configurável em `ptdb.storage.location`).
+Com o perfil errado, o usuário recebe a página 403 do portal.
 
-### Identidade visual
-
-Folha de estilo única (`src/main/resources/static/css/ptdb.css`) com paleta, tipografia (Segoe UI) e componentes padronizados, e layout responsivo:
-
-| Largura | Navegação | Indicadores | Tabela de gestão | Grade de cards (catálogo) |
-| --- | --- | --- | --- | --- |
-| ≥ 1280px | barra lateral | 4 colunas | tabela | 3 colunas |
-| 1024–1279px | barra lateral | 4 colunas | tabela | 2 colunas |
-| 768–1023px | barra superior | 2 colunas | tabela | 2 colunas |
-| < 768px | barra superior | 2 colunas | cartões empilhados | 1 coluna |
-
-Novas telas reutilizam o layout base em `templates/fragments/layout.html`:
-
-```html
-<head th:replace="~{fragments/layout :: head('Título da tela')}"></head>
-<body>
-<div class="app">
-    <aside th:replace="~{fragments/layout :: navegacao('item-ativo')}"></aside>
-    <main class="conteudo">...</main>
-</div>
-</body>
-```
-
-### Rotas
+## Rotas
 
 | Método | Rota | Descrição |
-| --- | --- | --- | --- | --- |
-| GET | `/` | Redireciona para o painel |
+| --- | --- | --- |
+| GET | `/` | Leva para a tela inicial do perfil atual |
+| POST | `/perfil` | Troca o perfil provisório |
+| GET | `/catalogo` | Catálogo por categoria (`termo`, `categoriaId`) |
+| GET | `/videos/{id}` | Página do vídeo |
+| GET | `/favoritos` | Meus favoritos |
+| POST | `/favoritos/{videoId}` | Marca/desmarca favorito |
+| GET | `/avaliacao`, `/avaliacao/historico` | Tela do avaliador |
+| POST | `/avaliacao/{videoId}` | Registra a decisão |
+| GET | `/faq` | Perguntas frequentes |
 | GET | `/admin` | Painel administrativo |
-| GET | `/admin/videos` | Listagem com indicadores, filtro e busca |
-| GET | `/admin/videos/novo` | Listagem com o modal de cadastro aberto |
-| POST | `/admin/videos` | Salva cadastro |
-| GET | `/admin/videos/{id}/editar` | Listagem com o modal de edição aberto |
-| POST | `/admin/videos/{id}` | Salva edição |
-| POST | `/admin/videos/{id}/excluir` | Exclusão lógica |
-| GET | `/midia/videos/{nome}` | Arquivo de vídeo enviado (respeita a visibilidade) |
-| GET | `/midia/capas/{nome}` | Imagem de capa (respeita a visibilidade) |
-
-Erros 403, 404 e 500 são exibidos com o layout do portal (`templates/error.html`).
+| GET/POST | `/admin/videos/**` | Gerenciar vídeos |
+| GET/POST | `/admin/categorias/**` | Gerenciar categorias |
+| GET/POST | `/admin/faq/**` | Gerenciar FAQ |
+| GET | `/midia/videos/{nome}`, `/midia/capas/{nome}` | Arquivos enviados (respeitam a visibilidade) |
 
 ## Testes
 
@@ -101,23 +96,26 @@ Erros 403, 404 e 500 são exibidos com o layout do portal (`templates/error.html
 ./mvnw test
 ```
 
-Cobrem validação de link/arquivo, visibilidade por perfil, consulta de aprovados, indicadores, fluxo do modal, painel administrativo e páginas de erro.
+Cobrem permissões por perfil, gestão de vídeos, catálogo e filtro por categoria, favoritos, avaliação (incluindo ajustes), categorias, FAQ, painel e páginas de erro.
 
-## Arquitetura (camadas)
+## Organização do código
 
 ```
-web/            HomeController (redirect raiz)
-painel/         PainelController, PainelService, IndicadoresPainel, AtividadeRecente, ItemFilaAvaliacao, TipoAtividade
-video/          Video, VideoStatus, OrigemVideo, LinkVideo, VideoRepository, VideoService, VideoController, VideoForm, MidiaController
-categoria/      Categoria, CategoriaRepository
-storage/        FileStorageService, StorageException
-security/       PerfilUsuario, UsuarioSessao, AdministradorInterceptor
-common/         exceções e GlobalExceptionHandler
-config/         WebConfig, RelogioConfig, CargaInicialCategorias
+security/   PerfilUsuario, UsuarioSessao, UsuarioLogado, PerfilController (perfil provisório), interceptors
+usuario/    Usuario, UsuarioRepository
+catalogo/   CatalogoController (catálogo por categoria e página do vídeo)
+video/      Video, VideoService, VideoController (admin), MidiaController, LinkVideo
+avaliacao/  Avaliacao, AvaliacaoService, AvaliacaoController, DecisaoAvaliacao
+favorito/   Favorito, FavoritoService, FavoritoController
+categoria/  Categoria, CategoriaService, CategoriaController
+faq/        ItemFaq, FaqService, FaqController, FaqAdminController
+painel/     PainelService, PainelController e classes dos indicadores
+config/     WebConfig (regras de acesso) e cargas iniciais (usuários de teste, categorias, FAQ)
+storage/    FileStorageService
+common/     exceções e GlobalExceptionHandler
+web/        Redirecionamento
 ```
 
-## Pendências e soluções provisórias
+## Fora do escopo deste repositório
 
-- **Login e perfis:** ainda não existem. O acesso ao gerenciamento é controlado por um interceptor que lê o perfil da sessão. Em dev, `ptdb.dev.auto-admin=true` (em `application.properties`) simula um Administrador autenticado. **Desligar esse flag** quando a autenticação estiver pronta.
-- **Banco de dados:** modelagem definitiva pendente. Por enquanto há as entidades mínimas `Video` e `Categoria` em H2 em memória.
-- **Categorias:** ainda não há CRUD de categorias; algumas são pré-carregadas em dev (`CargaInicialCategorias`).
+RF01 (login), RF02 (perfis), RF03 (tela inicial com cabeçalho e rodapé), RF04 (contador de visualizações), RF05 (banco de perfis e visualizações em MySQL) e RF10 (estrutura de banco de vídeos e favoritos) não fazem parte deste escopo. O seletor de perfil e a tabela mínima de usuários existem só para permitir testar RF07 e RF08 até o login ficar pronto.

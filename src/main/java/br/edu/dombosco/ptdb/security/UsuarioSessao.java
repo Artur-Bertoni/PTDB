@@ -1,32 +1,29 @@
 package br.edu.dombosco.ptdb.security;
 
+import br.edu.dombosco.ptdb.usuario.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-@Component
 public class UsuarioSessao {
 
-    public static final String ATRIBUTO_PERFIL = "perfilUsuario";
+    public static final String ATRIBUTO_USUARIO = "usuarioLogado";
 
-    private final boolean autoAdmin;
-
-    public UsuarioSessao(@Value("${ptdb.dev.auto-admin:false}") boolean autoAdmin) {
-        this.autoAdmin = autoAdmin;
+    public static UsuarioLogado buscar(HttpSession session) {
+        if (session == null) {
+            return null;
+        }
+        Object usuario = session.getAttribute(ATRIBUTO_USUARIO);
+        if (usuario instanceof UsuarioLogado) {
+            return (UsuarioLogado) usuario;
+        }
+        return null;
     }
 
-    public Optional<PerfilUsuario> perfil(HttpServletRequest request) {
-        HttpSession session = request.getSession(autoAdmin);
-        if (session == null) {
-            return Optional.empty();
-        }
-        Object perfil = session.getAttribute(ATRIBUTO_PERFIL);
-        if (perfil == null && autoAdmin) {
-            perfil = PerfilUsuario.ADMINISTRADOR;
-            session.setAttribute(ATRIBUTO_PERFIL, perfil);
-        }
-        return perfil instanceof PerfilUsuario p ? Optional.of(p) : Optional.empty();
+    public static UsuarioLogado buscar(HttpServletRequest request) {
+        return buscar(request.getSession(false));
+    }
+
+    public static void definir(HttpServletRequest request, Usuario usuario) {
+        request.getSession(true).setAttribute(ATRIBUTO_USUARIO, new UsuarioLogado(usuario));
     }
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Catálogo de vídeos')}"></head>
+<body>
+<div class="app">
+
+    <aside th:replace="~{fragments/layout :: navegacao('catalogo')}"></aside>
+
+    <main class="conteudo">
+
+        <header class="pagina__cabecalho">
+            <div>
+                <h1>Catálogo de vídeos</h1>
+                <p class="pagina__descricao">Vídeos de treinamento aprovados, organizados por categoria.</p>
+            </div>
+        </header>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <form class="busca" th:action="@{/catalogo}" method="get" role="search">
+            <label class="visualmente-oculto" for="termo">Pesquisar vídeos</label>
+            <input class="campo__input" type="search" id="termo" name="termo" th:value="${termo}"
+                   placeholder="Pesquisar por título, descrição ou autor...">
+            <input type="hidden" name="categoriaId" th:if="${categoriaSelecionada != null}"
+                   th:value="${categoriaSelecionada.id}">
+            <button class="botao botao--primario" type="submit">Pesquisar</button>
+        </form>
+
+        <div class="catalogo">
+            <nav class="categorias" aria-labelledby="titulo-categorias">
+                <h2 class="categorias__titulo" id="titulo-categorias">Categorias</h2>
+                <ul class="categorias__lista">
+                    <li>
+                        <a class="categorias__item"
+                           th:href="@{/catalogo(termo=${termo})}"
+                           th:classappend="${categoriaSelecionada == null} ? 'categorias__item--ativo'"
+                           th:aria-current="${categoriaSelecionada == null} ? 'page'">
+                            <span>Todas</span>
+                            <span class="categorias__contagem" th:text="${totalPublicados}">0</span>
+                        </a>
+                    </li>
+                    <li th:each="c : ${categorias}">
+                        <a class="categorias__item"
+                           th:href="@{/catalogo(categoriaId=${c.id}, termo=${termo})}"
+                           th:classappend="${categoriaSelecionada != null and categoriaSelecionada.id == c.id} ? 'categorias__item--ativo'"
+                           th:aria-current="${categoriaSelecionada != null and categoriaSelecionada.id == c.id} ? 'page'"
+                           th:title="${c.descricao}">
+                            <span th:text="${c.nome}">Categoria</span>
+                            <span class="categorias__contagem" th:text="${contagemPorCategoria.getOrDefault(c.id, 0L)}">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <section class="catalogo__videos" aria-labelledby="titulo-videos">
+                <div class="catalogo__cabecalho">
+                    <h2 id="titulo-videos" th:text="${categoriaSelecionada != null} ? ${categoriaSelecionada.nome} : 'Todos os vídeos'">Todos os vídeos</h2>
+                    <span class="contador"
+                          th:text="${#lists.size(videos) == 1} ? '1 vídeo' : ${#lists.size(videos)} + ' vídeos'">0 vídeos</span>
+                </div>
+                <p class="pagina__descricao catalogo__descricao"
+                   th:if="${categoriaSelecionada != null and categoriaSelecionada.descricao != null}"
+                   th:text="${categoriaSelecionada.descricao}"></p>
+                <p class="pagina__descricao catalogo__descricao" th:if="${termo != null and !#strings.isEmpty(termo)}">
+                    Resultados para "<strong th:text="${termo}"></strong>".
+                    <a th:href="@{/catalogo(categoriaId=${categoriaSelecionada?.id})}">Limpar pesquisa</a>
+                </p>
+
+                <div class="vazio" th:if="${#lists.isEmpty(videos)}">
+                    <strong>Nenhum vídeo encontrado.</strong>
+                    <th:block th:text="${termo != null and !#strings.isEmpty(termo)} ? 'Tente outros termos de pesquisa.' : 'Ainda não há vídeos aprovados nesta categoria.'"></th:block>
+                </div>
+
+                <ul class="grade-videos" th:unless="${#lists.isEmpty(videos)}">
+                    <th:block th:each="v : ${videos}">
+                        <li th:replace="~{fragments/layout :: cardVideo(${v})}"></li>
+                    </th:block>
+                </ul>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

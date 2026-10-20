@@ -25,4 +25,14 @@ class LinkVideoTest {
         assertThat(LinkVideo.capaYoutube("https://www.youtube.com/shorts/dQw4w9WgXcQ")).isEqualTo(capa);
         assertThat(LinkVideo.capaYoutube("https://vimeo.com/123456")).isNull();
     }
+
+    @Test
+    void geraEnderecoDoPlayerEmbutido() {
+        assertThat(LinkVideo.embed("https://youtu.be/dQw4w9WgXcQ"))
+                .isEqualTo("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
+        assertThat(LinkVideo.embed("https://vimeo.com/123456")).isEqualTo("https://player.vimeo.com/video/123456");
+        assertThat(LinkVideo.embed("https://drive.google.com/file/d/abc123/view"))
+                .isEqualTo("https://drive.google.com/file/d/abc123/preview");
+        assertThat(LinkVideo.embed("https://exemplo.com/video.mp4")).isNull();
+    }
 }

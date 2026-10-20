@@ -36,8 +36,8 @@
             </div>
             <div class="indicador indicador--neutro">
                 <span class="indicador__rotulo">Itens de FAQ</span>
-                <span class="indicador__valor">&mdash;</span>
-                <span class="indicador__detalhe">disponível em breve</span>
+                <span class="indicador__valor" th:text="${indicadores.itensFaq}">0</span>
+                <span class="indicador__detalhe">perguntas publicadas no FAQ</span>
             </div>
         </section>
 
@@ -52,7 +52,7 @@
                     <span class="modulo__descricao">Cadastrar, editar e excluir os vídeos do portal.</span>
                     <span class="modulo__acao">Acessar &rarr;</span>
                 </a>
-                <div class="modulo modulo--indisponivel" aria-disabled="true">
+                <a class="modulo" th:href="@{/admin/categorias}">
                     <span class="modulo__icone modulo__icone--categorias" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
                             <path d="M5 7h14M5 12h14M5 17h9"/>
@@ -60,9 +60,9 @@
                     </span>
                     <strong class="modulo__titulo">Gerenciar categorias</strong>
                     <span class="modulo__descricao">Organizar as categorias usadas na apresentação dos vídeos.</span>
-                    <span class="selo selo--neutro modulo__acao">Em breve</span>
-                </div>
-                <div class="modulo modulo--indisponivel" aria-disabled="true">
+                    <span class="modulo__acao">Acessar &rarr;</span>
+                </a>
+                <a class="modulo" th:href="@{/admin/faq}">
                     <span class="modulo__icone modulo__icone--faq" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
                             <path d="M9 9a3 3 0 1 1 4.2 2.7c-.7.3-1.2 1-1.2 1.8v.5M12 18h.01"/>
@@ -70,8 +70,8 @@
                     </span>
                     <strong class="modulo__titulo">Gerenciar FAQ</strong>
                     <span class="modulo__descricao">Incluir, editar e remover perguntas frequentes.</span>
-                    <span class="selo selo--neutro modulo__acao">Em breve</span>
-                </div>
+                    <span class="modulo__acao">Acessar &rarr;</span>
+                </a>
             </div>
         </section>
 
@@ -112,7 +112,6 @@
                 </ul>
             </section>
         </div>
-
     </main>
 </div>
 </body>
