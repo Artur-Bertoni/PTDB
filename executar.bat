@@ -19,8 +19,10 @@ echo %PORTA%| findstr /r "^[0-9][0-9]*$" >nul || (
 
 echo.
 echo [1/4] Verificando Java %JAVA_MIN% ou superior...
-if defined JAVA_HOME if exist "%JAVA_HOME%\bin\java.exe" call :checar_java "%JAVA_HOME%\bin\java.exe" && goto java_ok
-where java >nul 2>&1 && call :checar_java java && goto java_ok
+if defined JAVA_HOME if exist "%JAVA_HOME%\bin\java.exe" call :checar_java "%JAVA_HOME%\bin\java.exe" "%JAVA_HOME%" && goto java_ok
+set "JAVA_PATH="
+for %%I in (java.exe) do set "JAVA_PATH=%%~$PATH:I"
+if defined JAVA_PATH call :checar_java "%JAVA_PATH%" && goto java_ok
 call :jdk_local && goto java_ok
 
 echo       Java %JAVA_MIN%+ nao encontrado. Baixando JDK portatil (cerca de 200 MB, so na primeira vez)...
@@ -78,21 +80,30 @@ del "%TMP_JAVA%" >nul 2>&1
 endlocal & exit /b %SAIDA%
 
 :checar_java
+rem Argumento 1: java.exe a testar. Argumento 2: pasta do JDK, quando ja conhecida.
+rem A pasta so e lida da saida do Java em ultimo caso: essa saida vem em cp1252 e o
+rem cmd le em cp850, o que corrompe caminhos com acento (usuario "Garcia" com acento).
 set "JV=0"
-set "JH="
+set "JH=%~2"
 "%~1" -XshowSettings:properties -version > "%TMP_JAVA%" 2>&1 || exit /b 1
 for /f "tokens=2 delims==" %%V in ('findstr /c:"java.specification.version =" "%TMP_JAVA%"') do set "JV=%%V"
-for /f "tokens=2 delims==" %%H in ('findstr /c:"java.home =" "%TMP_JAVA%"') do set "JH=%%H"
 set "JV=%JV: =%"
-if defined JH set "JH=%JH:~1%"
 for /f "delims=." %%A in ("%JV%") do set "JV=%%A"
-if not defined JH exit /b 1
+if not defined JH call :java_home_da_saida
+if defined JH if not exist "%JH%\bin\java.exe" set "JH="
+if not defined JH for %%P in ("%~dp1..") do set "JH=%%~fP"
+if not exist "%JH%\bin\java.exe" exit /b 1
 if %JV% GEQ %JAVA_MIN% exit /b 0
 exit /b 1
 
+:java_home_da_saida
+for /f "tokens=2 delims==" %%H in ('findstr /c:"java.home =" "%TMP_JAVA%"') do set "JH=%%H"
+if defined JH set "JH=%JH:~1%"
+exit /b 0
+
 :jdk_local
 if not exist "%JDK_DIR%" exit /b 1
-for /d %%D in ("%JDK_DIR%\*") do if exist "%%D\bin\java.exe" call :checar_java "%%D\bin\java.exe" && exit /b 0
+for /d %%D in ("%JDK_DIR%\*") do if exist "%%D\bin\java.exe" call :checar_java "%%D\bin\java.exe" "%%D" && exit /b 0
 exit /b 1
 
 :baixar_jdk
