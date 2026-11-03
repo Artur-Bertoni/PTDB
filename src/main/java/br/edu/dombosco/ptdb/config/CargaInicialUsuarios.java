@@ -20,8 +20,8 @@ public class CargaInicialUsuarios implements CommandLineRunner {
         if (usuarioRepository.count() > 0) {
             return;
         }
-        usuarioRepository.save(new Usuario("Administrador do Portal", PerfilUsuario.ADMINISTRADOR));
-        usuarioRepository.save(new Usuario("Rafael Lima", PerfilUsuario.AVALIADOR));
-        usuarioRepository.save(new Usuario("Bruno Alves", PerfilUsuario.ALUNO));
+        usuarioRepository.save(new Usuario("Administrador do Portal", "admin@dombosco.edu.br", PerfilUsuario.ADMINISTRADOR));
+        usuarioRepository.save(new Usuario("Rafael Lima", "rafael.lima@dombosco.edu.br", PerfilUsuario.AVALIADOR));
+        usuarioRepository.save(new Usuario("Bruno Alves", "bruno.alves@dombosco.edu.br", PerfilUsuario.ALUNO));
     }
 }

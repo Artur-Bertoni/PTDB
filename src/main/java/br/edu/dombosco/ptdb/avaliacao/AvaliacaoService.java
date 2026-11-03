@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Errors;
 
 @Service
@@ -43,6 +44,7 @@ public class AvaliacaoService {
         }
     }
 
+    @Transactional
     public Avaliacao avaliar(Long videoId, Long avaliadorId, DecisaoAvaliacao decisao, String parecer) {
         if (decisao == null) {
             throw new RegraNegocioException("Escolha uma decisão.");

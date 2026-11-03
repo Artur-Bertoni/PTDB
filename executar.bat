@@ -68,7 +68,7 @@ echo [4/4] Iniciando a aplicacao...
 echo.
 echo   Aplicacao : http://localhost:%PORTA%
 echo   Banco H2  : http://localhost:%PORTA%/h2-console
-echo               JDBC URL jdbc:h2:mem:ptdb / usuario sa / senha vazia
+echo               JDBC URL jdbc:h2:file:./data/ptdb / usuario sa / senha vazia
 echo   Para parar: Ctrl + C nesta janela
 echo.
 

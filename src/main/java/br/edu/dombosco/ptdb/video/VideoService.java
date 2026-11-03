@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -205,6 +206,7 @@ public class VideoService {
         return videoRepository.save(video);
     }
 
+    @Transactional
     public void excluir(Long id) {
         Video video = buscarPorId(id);
         video.setAtivo(false);

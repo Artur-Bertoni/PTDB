@@ -21,6 +21,8 @@ target/
 
 uploads/
 
+data/
+
 .idea/
 *.iml
 .vscode/
