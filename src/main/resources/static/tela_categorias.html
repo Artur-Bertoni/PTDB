@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorias - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Categorias</h1>
+                <p>Organize os vídeos do portal por categoria.</p>
+            </div>
+        </section>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <section class="caixa">
+            <h2 id="tituloFormulario">Nova categoria</h2>
+            <form id="formulario" class="formulario" novalidate>
+                <div class="campo">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" maxlength="100">
+                    <span class="erro-campo" data-erro="nome"></span>
+                </div>
+                <div class="campo">
+                    <label for="descricao">Descrição</label>
+                    <input type="text" id="descricao" maxlength="255">
+                    <span class="erro-campo" data-erro="descricao"></span>
+                </div>
+                <div class="botoes-formulario">
+                    <button type="button" class="botao botao-secundario" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="botao" id="btnSalvar">Salvar categoria</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="caixa tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                    <tr><th>Nome</th><th>Descrição</th><th>Vídeos publicados</th><th></th></tr>
+                </thead>
+                <tbody id="linhasTabela"></tbody>
+            </table>
+            <p id="semCategorias" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_categorias.js"></script>
+
+</body>
+
+</html>

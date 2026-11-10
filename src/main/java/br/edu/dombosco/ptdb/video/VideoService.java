@@ -6,19 +6,17 @@ import br.edu.dombosco.ptdb.common.RecursoNaoEncontradoException;
 import br.edu.dombosco.ptdb.common.RegraNegocioException;
 import br.edu.dombosco.ptdb.favorito.Favorito;
 import br.edu.dombosco.ptdb.favorito.FavoritoRepository;
-import br.edu.dombosco.ptdb.security.PerfilUsuario;
 import br.edu.dombosco.ptdb.security.UsuarioLogado;
 import br.edu.dombosco.ptdb.storage.FileStorageService;
 import br.edu.dombosco.ptdb.usuario.Usuario;
 import br.edu.dombosco.ptdb.usuario.UsuarioRepository;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -45,26 +43,15 @@ public class VideoService {
         this.storage = storage;
     }
 
-    public List<Video> listar(String termo, Long categoriaId, VideoStatus status) {
-        List<Video> todos = videoRepository.findByAtivoTrueOrderByDataPublicacaoDescIdDesc();
-        List<Video> resultado = new ArrayList<>();
-        for (Video video : todos) {
-            if (categoriaId != null && !video.getCategoria().getId().equals(categoriaId)) {
-                continue;
-            }
-            if (status != null && video.getStatus() != status) {
-                continue;
-            }
-            if (!contemTermo(video, termo)) {
-                continue;
-            }
-            resultado.add(video);
-        }
-        return resultado;
+    public List<Video> listarPublicados() {
+        return videoRepository.findByAtivoTrueAndStatusOrderByDataPublicacaoDescIdDesc(VideoStatus.APROVADO);
     }
 
-    public List<Video> listarPublicados(String termo, Long categoriaId) {
-        return listar(termo, categoriaId, VideoStatus.APROVADO);
+    public List<Video> listarParaGestao(UsuarioLogado usuario) {
+        if (usuario.isAdministrador()) {
+            return videoRepository.findByAtivoTrueOrderByDataPublicacaoDescIdDesc();
+        }
+        return videoRepository.findByAtivoTrueAndCadastradoPorIdOrderByDataPublicacaoDescIdDesc(usuario.getId());
     }
 
     public Map<Long, Long> contarPublicadosPorCategoria() {
@@ -81,18 +68,13 @@ public class VideoService {
         return contagem;
     }
 
-    public IndicadoresVideos indicadores() {
-        return new IndicadoresVideos(
-                videoRepository.countByAtivoTrue(),
-                videoRepository.countByAtivoTrueAndStatus(VideoStatus.AGUARDANDO_AVALIACAO),
-                videoRepository.countByAtivoTrueAndStatus(VideoStatus.APROVADO),
-                videoRepository.countByAtivoTrueAndStatus(VideoStatus.REPROVADO));
-    }
-
-    public Video buscarPorId(Long id) {
+    public Video buscarParaGestao(Long id, UsuarioLogado usuario) {
         Video video = videoRepository.findByIdAndAtivoTrue(id);
         if (video == null) {
-            throw new RecursoNaoEncontradoException("Vídeo não encontrado (id=" + id + ").");
+            throw new RecursoNaoEncontradoException("Vídeo não encontrado.");
+        }
+        if (!usuario.isAdministrador() && !video.foiCadastradoPor(usuario.getId())) {
+            throw new RecursoNaoEncontradoException("Vídeo não encontrado.");
         }
         return video;
     }
@@ -103,6 +85,13 @@ public class VideoService {
             throw new RecursoNaoEncontradoException("Vídeo não encontrado ou indisponível.");
         }
         return video;
+    }
+
+    public void registrarVisualizacao(Video video) {
+        if (video.isPublicado()) {
+            video.setQtdViews(video.getQtdViews() + 1);
+            videoRepository.save(video);
+        }
     }
 
     public Video buscarPorArquivo(String nomeArquivo, UsuarioLogado usuario) {
@@ -122,7 +111,10 @@ public class VideoService {
     }
 
     public boolean podeVisualizar(Video video, UsuarioLogado usuario) {
-        if (usuario != null && usuario.getPerfil() == PerfilUsuario.ADMINISTRADOR) {
+        if (usuario == null) {
+            return false;
+        }
+        if (usuario.isAdministrador()) {
             return true;
         }
         if (!video.isAtivo()) {
@@ -131,84 +123,85 @@ public class VideoService {
         if (video.getStatus() == VideoStatus.APROVADO) {
             return true;
         }
-        return usuario != null && usuario.getPerfil() == PerfilUsuario.AVALIADOR;
+        return usuario.isAvaliador() || video.foiCadastradoPor(usuario.getId());
     }
 
-    public void validar(VideoForm form, Video atual, Errors errors) {
+    public Map<String, String> validar(VideoForm form, Video atual) {
+        Map<String, String> erros = new LinkedHashMap<>();
+
         if (vazio(form.getTitulo())) {
-            errors.rejectValue("titulo", "obrigatorio", "O título é obrigatório.");
+            erros.put("titulo", "O título é obrigatório.");
         } else if (form.getTitulo().length() > 150) {
-            errors.rejectValue("titulo", "tamanho", "O título deve ter no máximo 150 caracteres.");
+            erros.put("titulo", "O título deve ter no máximo 150 caracteres.");
         }
 
         if (vazio(form.getDescricao())) {
-            errors.rejectValue("descricao", "obrigatorio", "A descrição é obrigatória.");
+            erros.put("descricao", "A descrição é obrigatória.");
         } else if (form.getDescricao().length() > 4000) {
-            errors.rejectValue("descricao", "tamanho", "A descrição deve ter no máximo 4000 caracteres.");
+            erros.put("descricao", "A descrição deve ter no máximo 4000 caracteres.");
         }
 
         if (vazio(form.getAutor())) {
-            errors.rejectValue("autor", "obrigatorio", "O autor é obrigatório.");
+            erros.put("autor", "O autor é obrigatório.");
         } else if (form.getAutor().length() > 150) {
-            errors.rejectValue("autor", "tamanho", "O autor deve ter no máximo 150 caracteres.");
+            erros.put("autor", "O autor deve ter no máximo 150 caracteres.");
         }
 
         if (form.getCategoriaId() == null) {
-            errors.rejectValue("categoriaId", "obrigatorio", "A categoria é obrigatória.");
+            erros.put("categoriaId", "A categoria é obrigatória.");
         } else if (!categoriaRepository.existsByIdAndAtivaTrue(form.getCategoriaId())) {
-            errors.rejectValue("categoriaId", "invalida", "Selecione uma categoria válida.");
+            erros.put("categoriaId", "Selecione uma categoria válida.");
         }
 
         if (form.getDataPublicacao() == null) {
-            errors.rejectValue("dataPublicacao", "obrigatorio", "A data de publicação é obrigatória.");
+            erros.put("dataPublicacao", "A data de publicação é obrigatória.");
         }
 
         if (form.getOrigem() == null) {
-            errors.rejectValue("origem", "obrigatorio", "Informe se o vídeo será um link ou um arquivo.");
+            erros.put("origem", "Informe se o vídeo será um link ou um arquivo.");
         } else if (form.getOrigem() == OrigemVideo.LINK) {
             if (vazio(form.getLink())) {
-                errors.rejectValue("link", "obrigatorio", "Informe o link do vídeo.");
+                erros.put("link", "Informe o link do vídeo.");
             } else if (form.getLink().length() > 500) {
-                errors.rejectValue("link", "tamanho", "O link deve ter no máximo 500 caracteres.");
+                erros.put("link", "O link deve ter no máximo 500 caracteres.");
             } else if (!LinkVideo.valido(form.getLink())) {
-                errors.rejectValue("link", "invalido", "Informe um link válido, começando com http:// ou https://.");
+                erros.put("link", "Informe um link válido, começando com http:// ou https://.");
             }
         } else {
             boolean enviouArquivo = temArquivo(form.getArquivoVideo());
             boolean jaTemArquivo = atual != null && atual.isArquivo();
             if (!enviouArquivo && !jaTemArquivo) {
-                errors.rejectValue("arquivoVideo", "obrigatorio", "Selecione o arquivo do vídeo.");
+                erros.put("arquivoVideo", "Selecione o arquivo do vídeo.");
             } else if (enviouArquivo && !tipoAceito(form.getArquivoVideo(), TIPO_VIDEO)) {
-                errors.rejectValue("arquivoVideo", "tipo", "O arquivo enviado não é um vídeo (use MP4, WebM ou similar).");
+                erros.put("arquivoVideo", "O arquivo enviado não é um vídeo (use MP4, WebM ou similar).");
             }
         }
 
         if (temArquivo(form.getImagemCapa()) && !tipoAceito(form.getImagemCapa(), TIPO_IMAGEM)) {
-            errors.rejectValue("imagemCapa", "tipo", "A imagem de capa deve ser uma imagem (JPG, PNG ou similar).");
+            erros.put("imagemCapa", "A imagem de capa deve ser uma imagem (JPG, PNG ou similar).");
         }
+        return erros;
     }
 
-    public Video criar(VideoForm form, Long cadastradoPorId) {
+    public Video criar(VideoForm form, UsuarioLogado usuario) {
         Video video = new Video();
         video.setDataCadastro(LocalDateTime.now());
-        if (cadastradoPorId != null) {
-            Usuario usuario = usuarioRepository.findById(cadastradoPorId).orElse(null);
-            video.setCadastradoPor(usuario);
-        }
-        preencher(video, form);
+        Usuario cadastradoPor = usuarioRepository.findById(usuario.getId()).orElse(null);
+        video.setCadastradoPor(cadastradoPor);
+        preencher(video, form, usuario);
         return videoRepository.save(video);
     }
 
-    public Video atualizar(Long id, VideoForm form) {
-        Video video = buscarPorId(id);
+    public Video atualizar(Long id, VideoForm form, UsuarioLogado usuario) {
+        Video video = buscarParaGestao(id, usuario);
         video.setDataAtualizacao(LocalDateTime.now());
-        preencher(video, form);
+        preencher(video, form, usuario);
         return videoRepository.save(video);
     }
 
     @Transactional
-    public void excluir(Long id) {
-        Video video = buscarPorId(id);
+    public void excluir(Long id, UsuarioLogado usuario) {
+        Video video = buscarParaGestao(id, usuario);
         video.setAtivo(false);
         video.setDataAtualizacao(LocalDateTime.now());
         videoRepository.save(video);
@@ -217,13 +210,17 @@ public class VideoService {
         favoritoRepository.deleteAll(favoritos);
     }
 
-    private void preencher(Video video, VideoForm form) {
+    private void preencher(Video video, VideoForm form, UsuarioLogado usuario) {
         video.setTitulo(form.getTitulo().trim());
         video.setDescricao(form.getDescricao().trim());
         video.setAutor(form.getAutor().trim());
         video.setCategoria(buscarCategoria(form.getCategoriaId()));
         video.setDataPublicacao(form.getDataPublicacao());
-        video.setStatus(VideoStatus.AGUARDANDO_AVALIACAO);
+        if (usuario.isAdministrador()) {
+            video.setStatus(VideoStatus.APROVADO);
+        } else {
+            video.setStatus(VideoStatus.AGUARDANDO_AVALIACAO);
+        }
         video.setAtivo(true);
         aplicarMidia(video, form);
         aplicarImagemCapa(video, form.getImagemCapa());
@@ -277,16 +274,6 @@ public class VideoService {
             throw new RegraNegocioException("Selecione uma categoria válida.");
         }
         return categoria;
-    }
-
-    private boolean contemTermo(Video video, String termo) {
-        if (vazio(termo)) {
-            return true;
-        }
-        String busca = termo.trim().toLowerCase();
-        return video.getTitulo().toLowerCase().contains(busca)
-                || video.getDescricao().toLowerCase().contains(busca)
-                || video.getAutor().toLowerCase().contains(busca);
     }
 
     private boolean vazio(String texto) {

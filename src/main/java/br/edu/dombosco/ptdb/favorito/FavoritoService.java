@@ -53,10 +53,6 @@ public class FavoritoService {
         return videos;
     }
 
-    public boolean favoritado(Long usuarioId, Long videoId) {
-        return favoritoRepository.findByUsuarioIdAndVideoId(usuarioId, videoId) != null;
-    }
-
     public Set<Long> idsFavoritados(UsuarioLogado usuario) {
         Set<Long> ids = new HashSet<>();
         if (usuario == null || !usuario.isAluno()) {

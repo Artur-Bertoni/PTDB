@@ -13,13 +13,15 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 
     List<Video> findByAtivoTrueOrderByDataPublicacaoDescIdDesc();
 
+    List<Video> findByAtivoTrueAndCadastradoPorIdOrderByDataPublicacaoDescIdDesc(Long usuarioId);
+
+    List<Video> findByAtivoTrueAndStatusOrderByDataPublicacaoDescIdDesc(VideoStatus status);
+
     List<Video> findByAtivoTrueAndStatus(VideoStatus status);
 
     List<Video> findByAtivoTrueAndStatusOrderByDataCadastroAsc(VideoStatus status);
 
     boolean existsByCategoriaIdAndAtivoTrue(Long categoriaId);
-
-    long countByAtivoTrue();
 
     long countByAtivoTrueAndStatus(VideoStatus status);
 }

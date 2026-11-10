@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Vídeos - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1 id="tituloPagina">Gerenciar Vídeos</h1>
+                <p id="descricaoPagina"></p>
+            </div>
+            <button type="button" class="botao" id="btnNovo">+ Novo vídeo</button>
+        </section>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <section class="indicadores">
+            <div class="indicador"><span>Vídeos</span><strong id="totalVideos">0</strong></div>
+            <div class="indicador"><span>Aguardando avaliação</span><strong id="totalAguardando">0</strong></div>
+            <div class="indicador"><span>Ajustes solicitados</span><strong id="totalAjustes">0</strong></div>
+            <div class="indicador"><span>Aprovados</span><strong id="totalAprovados">0</strong></div>
+            <div class="indicador"><span>Reprovados</span><strong id="totalReprovados">0</strong></div>
+        </section>
+
+        <section class="filtros">
+            <input type="text" id="pesquisa" placeholder="Buscar por título, descrição ou autor...">
+            <select id="filtroCategoria">
+                <option value="">Todas as categorias</option>
+            </select>
+            <select id="filtroStatus">
+                <option value="">Todos os status</option>
+                <option value="AGUARDANDO_AVALIACAO">Aguardando avaliação</option>
+                <option value="AJUSTES_SOLICITADOS">Ajustes solicitados</option>
+                <option value="APROVADO">Aprovado</option>
+                <option value="REPROVADO">Reprovado</option>
+            </select>
+        </section>
+
+        <section class="caixa tabela-rolagem">
+            <table class="tabela">
+                <thead id="cabecalhoTabela"></thead>
+                <tbody id="linhasTabela"></tbody>
+            </table>
+            <p id="semVideos" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <div class="janela" id="janela">
+        <div class="janela-conteudo">
+
+            <h2 id="tituloFormulario">Novo vídeo</h2>
+
+            <form id="formulario" class="formulario" novalidate>
+
+                <div class="campo campo-largo">
+                    <label for="titulo">Título *</label>
+                    <input type="text" id="titulo" name="titulo" maxlength="150">
+                    <span class="erro-campo" data-erro="titulo"></span>
+                </div>
+
+                <div class="campo campo-largo">
+                    <label for="descricao">Descrição *</label>
+                    <textarea id="descricao" name="descricao" rows="4" maxlength="4000"></textarea>
+                    <span class="erro-campo" data-erro="descricao"></span>
+                </div>
+
+                <div class="campo campo-largo">
+                    <label for="autor">Autor *</label>
+                    <input type="text" id="autor" name="autor" maxlength="150"
+                           placeholder="Professor(a) ou responsável pelo conteúdo">
+                    <span class="erro-campo" data-erro="autor"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="categoriaId">Categoria *</label>
+                    <select id="categoriaId" name="categoriaId">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <span class="erro-campo" data-erro="categoriaId"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="dataPublicacao">Data de publicação *</label>
+                    <input type="date" id="dataPublicacao" name="dataPublicacao">
+                    <span class="erro-campo" data-erro="dataPublicacao"></span>
+                </div>
+
+                <div class="campo campo-largo">
+                    <label>Vídeo *</label>
+                    <div class="opcoes">
+                        <label><input type="radio" name="origem" value="LINK" checked> Link externo</label>
+                        <label><input type="radio" name="origem" value="ARQUIVO"> Arquivo enviado</label>
+                    </div>
+                    <span class="erro-campo" data-erro="origem"></span>
+                </div>
+
+                <div class="campo campo-largo" id="campoLink">
+                    <label for="link">Link do vídeo *</label>
+                    <input type="url" id="link" name="link" maxlength="500"
+                           placeholder="https://www.youtube.com/watch?v=...">
+                    <span class="ajuda">YouTube, Vimeo, Google Drive ou outro endereço público.</span>
+                    <span class="erro-campo" data-erro="link"></span>
+                </div>
+
+                <div class="campo campo-largo" id="campoArquivo">
+                    <label for="arquivoVideo">Arquivo do vídeo *</label>
+                    <input type="file" id="arquivoVideo" name="arquivoVideo" accept="video/*">
+                    <span class="ajuda" id="arquivoAtual"></span>
+                    <span class="erro-campo" data-erro="arquivoVideo"></span>
+                </div>
+
+                <div class="campo campo-largo">
+                    <label for="imagemCapa">Imagem de capa</label>
+                    <input type="file" id="imagemCapa" name="imagemCapa" accept="image/*">
+                    <span class="ajuda">Opcional. Para links do YouTube, a capa do próprio vídeo é usada automaticamente.</span>
+                    <span class="erro-campo" data-erro="imagemCapa"></span>
+                </div>
+
+                <p class="campo-largo aviso" id="avisoFormulario"></p>
+
+                <div class="botoes-formulario">
+                    <button type="button" class="botao botao-secundario" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="botao" id="btnSalvar">Salvar vídeo</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_gerenciar_videos.js"></script>
+
+</body>
+
+</html>

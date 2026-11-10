@@ -24,6 +24,15 @@ public class UsuarioSessao {
     }
 
     public static void definir(HttpServletRequest request, Usuario usuario) {
-        request.getSession(true).setAttribute(ATRIBUTO_USUARIO, new UsuarioLogado(usuario));
+        request.getSession(true);
+        request.changeSessionId();
+        request.getSession().setAttribute(ATRIBUTO_USUARIO, new UsuarioLogado(usuario));
+    }
+
+    public static void sair(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
     }
 }

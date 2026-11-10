@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Usuários</h1>
+                <p>Pesquise usuários e promova alunos a avaliador (liberador de vídeos).</p>
+            </div>
+        </section>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <section class="filtros">
+            <input type="text" id="pesquisa" placeholder="Pesquisar por nome, matrícula ou e-mail...">
+            <select id="filtroPerfil">
+                <option value="">Todos os perfis</option>
+                <option value="ALUNO">Aluno</option>
+                <option value="AVALIADOR">Avaliador</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+            </select>
+        </section>
+
+        <section class="caixa tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                    <tr><th>Nome</th><th>Matrícula</th><th>E-mail</th><th>Perfil</th><th></th></tr>
+                </thead>
+                <tbody id="linhasTabela"></tbody>
+            </table>
+            <p id="semUsuarios" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_usuarios.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar FAQ - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Gerenciar FAQ</h1>
+                <p>Cadastre, edite e exclua as perguntas frequentes do portal.</p>
+            </div>
+        </section>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <section class="caixa">
+            <h2 id="tituloFormulario">Nova pergunta</h2>
+            <form id="formulario" class="formulario" novalidate>
+                <div class="campo campo-largo">
+                    <label for="pergunta">Pergunta *</label>
+                    <input type="text" id="pergunta" maxlength="300">
+                    <span class="erro-campo" data-erro="pergunta"></span>
+                </div>
+                <div class="campo campo-largo">
+                    <label for="resposta">Resposta *</label>
+                    <textarea id="resposta" rows="4" maxlength="4000"></textarea>
+                    <span class="erro-campo" data-erro="resposta"></span>
+                </div>
+                <div class="campo">
+                    <label for="categoriaTema">Tema</label>
+                    <input type="text" id="categoriaTema" maxlength="100" placeholder="Em branco = Geral">
+                    <span class="erro-campo" data-erro="categoriaTema"></span>
+                </div>
+                <div class="botoes-formulario">
+                    <button type="button" class="botao botao-secundario" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="botao" id="btnSalvar">Salvar pergunta</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="filtros">
+            <input type="text" id="pesquisa" placeholder="Pesquisar pergunta, resposta ou tema...">
+        </section>
+
+        <section class="caixa tabela-rolagem">
+            <table class="tabela">
+                <thead>
+                    <tr><th>Pergunta</th><th>Tema</th><th></th></tr>
+                </thead>
+                <tbody id="linhasTabela"></tbody>
+            </table>
+            <p id="semPerguntas" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_gerenciar_faq.js"></script>
+
+</body>
+
+</html>

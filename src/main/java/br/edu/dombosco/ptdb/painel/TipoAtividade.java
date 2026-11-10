@@ -2,8 +2,8 @@ package br.edu.dombosco.ptdb.painel;
 
 public enum TipoAtividade {
 
-    CADASTRO("foi cadastrado e enviado para avaliação"),
-    EDICAO("foi editado e reenviado para avaliação"),
+    CADASTRO("foi cadastrado"),
+    EDICAO("foi editado"),
     EXCLUSAO("foi excluído"),
     APROVACAO("foi aprovado"),
     REPROVACAO("foi reprovado"),

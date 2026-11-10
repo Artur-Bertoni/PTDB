@@ -7,12 +7,11 @@ import br.edu.dombosco.ptdb.video.Video;
 import br.edu.dombosco.ptdb.video.VideoRepository;
 import br.edu.dombosco.ptdb.video.VideoStatus;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Errors;
 
 @Service
 public class AvaliacaoService {
@@ -33,15 +32,17 @@ public class AvaliacaoService {
         return videoRepository.findByAtivoTrueAndStatusOrderByDataCadastroAsc(VideoStatus.AGUARDANDO_AVALIACAO);
     }
 
-    public void validar(AvaliacaoForm form, Errors errors) {
-        if (form.getParecer() == null || form.getParecer().isBlank()) {
-            errors.rejectValue("parecer", "obrigatorio", "O parecer é obrigatório para qualquer decisão.");
-        } else if (form.getParecer().length() > 4000) {
-            errors.rejectValue("parecer", "tamanho", "O parecer deve ter no máximo 4000 caracteres.");
-        }
+    public Map<String, String> validar(AvaliacaoForm form) {
+        Map<String, String> erros = new LinkedHashMap<>();
         if (form.getDecisao() == null) {
-            errors.rejectValue("decisao", "obrigatorio", "Escolha uma decisão.");
+            erros.put("decisao", "Escolha uma decisão.");
         }
+        if (form.getParecer() == null || form.getParecer().isBlank()) {
+            erros.put("parecer", "O parecer é obrigatório para qualquer decisão.");
+        } else if (form.getParecer().length() > 4000) {
+            erros.put("parecer", "O parecer deve ter no máximo 4000 caracteres.");
+        }
+        return erros;
     }
 
     @Transactional
@@ -76,22 +77,7 @@ public class AvaliacaoService {
         return avaliacaoRepository.findAllByOrderByDataDesc();
     }
 
-    public List<Avaliacao> maisRecentes() {
-        return avaliacaoRepository.findTop5ByOrderByDataDesc();
-    }
-
     public Avaliacao ultimaDoVideo(Long videoId) {
         return avaliacaoRepository.findFirstByVideoIdOrderByDataDesc(videoId);
-    }
-
-    public Map<Long, Avaliacao> ultimaPorVideo(List<Video> videos) {
-        Map<Long, Avaliacao> ultimas = new HashMap<>();
-        for (Video video : videos) {
-            Avaliacao ultima = ultimaDoVideo(video.getId());
-            if (ultima != null) {
-                ultimas.put(video.getId(), ultima);
-            }
-        }
-        return ultimas;
     }
 }

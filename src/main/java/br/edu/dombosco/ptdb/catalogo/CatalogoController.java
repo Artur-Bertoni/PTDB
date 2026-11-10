@@ -1,6 +1,7 @@
 package br.edu.dombosco.ptdb.catalogo;
 
 import br.edu.dombosco.ptdb.categoria.Categoria;
+import br.edu.dombosco.ptdb.categoria.CategoriaResumo;
 import br.edu.dombosco.ptdb.categoria.CategoriaService;
 import br.edu.dombosco.ptdb.favorito.FavoritoService;
 import br.edu.dombosco.ptdb.security.UsuarioLogado;
@@ -11,13 +12,14 @@ import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import java.util.Set;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class CatalogoController {
 
     private static final int LIMITE_RELACIONADOS = 4;
@@ -34,61 +36,43 @@ public class CatalogoController {
         this.favoritoService = favoritoService;
     }
 
-    @GetMapping("/catalogo")
-    public String catalogo(@RequestParam(required = false) String termo,
-                           @RequestParam(required = false) Long categoriaId,
-                           HttpSession session,
-                           Model model) {
+    @GetMapping("/videos")
+    public List<VideoResumo> listarVideos(HttpSession session) {
         UsuarioLogado usuario = UsuarioSessao.buscar(session);
-        List<Categoria> categorias = categoriaService.listarAtivas();
-
-        Categoria selecionada = null;
-        for (Categoria categoria : categorias) {
-            if (categoria.getId().equals(categoriaId)) {
-                selecionada = categoria;
-            }
+        Set<Long> favoritos = favoritoService.idsFavoritados(usuario);
+        List<VideoResumo> resumos = new ArrayList<>();
+        for (Video video : videoService.listarPublicados()) {
+            resumos.add(new VideoResumo(video, favoritos.contains(video.getId())));
         }
-
-        Long filtro = null;
-        if (selecionada != null) {
-            filtro = selecionada.getId();
-        }
-        List<Video> videos = videoService.listarPublicados(termo, filtro);
-
-        Map<Long, Long> contagem = videoService.contarPublicadosPorCategoria();
-        long totalPublicados = 0;
-        for (Long quantidade : contagem.values()) {
-            totalPublicados = totalPublicados + quantidade;
-        }
-
-        model.addAttribute("categorias", categorias);
-        model.addAttribute("contagemPorCategoria", contagem);
-        model.addAttribute("totalPublicados", totalPublicados);
-        model.addAttribute("categoriaSelecionada", selecionada);
-        model.addAttribute("termo", termo);
-        model.addAttribute("videos", videos);
-        model.addAttribute("favoritos", favoritoService.idsFavoritados(usuario));
-        return "catalogo/catalogo";
+        return resumos;
     }
 
     @GetMapping("/videos/{id}")
-    public String exibir(@PathVariable Long id, HttpSession session, Model model) {
+    public VideoDetalhe exibir(@PathVariable Long id, HttpSession session) {
         UsuarioLogado usuario = UsuarioSessao.buscar(session);
         Video video = videoService.buscarParaExibir(id, usuario);
+        videoService.registrarVisualizacao(video);
+        Set<Long> favoritos = favoritoService.idsFavoritados(usuario);
 
-        List<Video> relacionados = new ArrayList<>();
+        List<VideoResumo> relacionados = new ArrayList<>();
         if (video.isPublicado()) {
-            List<Video> mesmaCategoria = videoService.listarPublicados(null, video.getCategoria().getId());
-            for (Video outro : mesmaCategoria) {
-                if (!outro.getId().equals(id) && relacionados.size() < LIMITE_RELACIONADOS) {
-                    relacionados.add(outro);
+            for (Video outro : videoService.listarPublicados()) {
+                boolean mesmaCategoria = outro.getCategoria().getId().equals(video.getCategoria().getId());
+                if (mesmaCategoria && !outro.getId().equals(id) && relacionados.size() < LIMITE_RELACIONADOS) {
+                    relacionados.add(new VideoResumo(outro, favoritos.contains(outro.getId())));
                 }
             }
         }
+        return new VideoDetalhe(video, favoritos.contains(id), usuario.isAdministrador(), relacionados);
+    }
 
-        model.addAttribute("video", video);
-        model.addAttribute("relacionados", relacionados);
-        model.addAttribute("favoritos", favoritoService.idsFavoritados(usuario));
-        return "catalogo/assistir";
+    @GetMapping("/categorias")
+    public List<CategoriaResumo> listarCategorias() {
+        Map<Long, Long> contagem = videoService.contarPublicadosPorCategoria();
+        List<CategoriaResumo> lista = new ArrayList<>();
+        for (Categoria categoria : categoriaService.listarAtivas()) {
+            lista.add(new CategoriaResumo(categoria, contagem.get(categoria.getId())));
+        }
+        return lista;
     }
 }

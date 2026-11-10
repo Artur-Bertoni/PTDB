@@ -60,6 +60,9 @@ public class Video {
     @Column(nullable = false, length = 30)
     private VideoStatus status = VideoStatus.AGUARDANDO_AVALIACAO;
 
+    @Column(name = "qtd_views", nullable = false)
+    private int qtdViews;
+
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDateTime dataCadastro;
 
@@ -88,8 +91,26 @@ public class Video {
         return isLink() ? LinkVideo.embed(arquivoLink) : null;
     }
 
+    public String getCapaUrl() {
+        if (imagemCapa != null) {
+            return "/midia/capas/" + imagemCapa;
+        }
+        return getCapaExterna();
+    }
+
+    public String getArquivoUrl() {
+        if (isArquivo()) {
+            return "/midia/videos/" + arquivoLink;
+        }
+        return null;
+    }
+
     public boolean isPublicado() {
         return ativo && status == VideoStatus.APROVADO;
+    }
+
+    public boolean foiCadastradoPor(Long usuarioId) {
+        return cadastradoPor != null && cadastradoPor.getId().equals(usuarioId);
     }
 
     public Long getId() {
@@ -186,6 +207,14 @@ public class Video {
 
     public void setStatus(VideoStatus status) {
         this.status = status;
+    }
+
+    public int getQtdViews() {
+        return qtdViews;
+    }
+
+    public void setQtdViews(int qtdViews) {
+        this.qtdViews = qtdViews;
     }
 
     public LocalDateTime getDataCadastro() {

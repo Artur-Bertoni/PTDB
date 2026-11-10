@@ -17,6 +17,21 @@ echo %PORTA%| findstr /r "^[0-9][0-9]*$" >nul || (
     goto falha
 )
 
+:perguntar_banco
+echo.
+echo Qual banco de dados usar?
+echo   1 - MySQL ^(precisa de um MySQL rodando nesta maquina^)
+echo   2 - H2 em memoria ^(nao precisa instalar nada; os dados somem ao fechar^)
+set "MODO="
+set "ESCOLHA="
+set /p "ESCOLHA=Digite 1 ou 2 e aperte Enter: "
+if "%ESCOLHA%"=="1" set "MODO=mysql"
+if "%ESCOLHA%"=="2" set "MODO=h2"
+if not defined MODO (
+    echo Opcao invalida.
+    goto perguntar_banco
+)
+
 echo.
 echo [1/4] Verificando Java %JAVA_MIN% ou superior...
 if defined JAVA_HOME if exist "%JAVA_HOME%\bin\java.exe" call :checar_java "%JAVA_HOME%\bin\java.exe" "%JAVA_HOME%" && goto java_ok
@@ -50,6 +65,23 @@ if errorlevel 1 (
 )
 echo       OK
 
+if "%MODO%"=="h2" goto banco_ok
+if defined PTDB_DB_URL goto banco_ok
+powershell -NoProfile -Command "if (-not (Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue)) { exit 1 }"
+if not errorlevel 1 goto banco_ok
+echo.
+echo Nenhum MySQL encontrado em localhost:3306.
+set "RESPOSTA="
+set /p "RESPOSTA=Deseja usar o H2 em memoria? (S/N): "
+if /i "%RESPOSTA%"=="S" set "MODO=h2"
+if "%MODO%"=="h2" goto banco_ok
+echo Inicie o MySQL ^(usuario root / senha 123456^) e rode o executar.bat de novo.
+goto falha
+
+:banco_ok
+set "PERFIL="
+if "%MODO%"=="h2" set "PERFIL=--spring.profiles.active=h2"
+
 echo.
 echo [3/4] Compilando o projeto (na primeira vez baixa Maven e dependencias, pode demorar)...
 call "%~dp0mvnw.cmd" -B -q -DskipTests package
@@ -67,22 +99,24 @@ echo.
 echo [4/4] Iniciando a aplicacao...
 echo.
 echo   Aplicacao : http://localhost:%PORTA%
-echo   Banco H2  : http://localhost:%PORTA%/h2-console
-echo               JDBC URL jdbc:h2:file:./data/ptdb / usuario sa / senha vazia
+if "%MODO%"=="h2" (
+    echo   Banco H2  : em memoria, os dados somem ao fechar a aplicacao
+    echo               console em http://localhost:%PORTA%/h2-console
+    echo               JDBC URL jdbc:h2:mem:ptdb / usuario sa / senha vazia
+) else (
+    echo   Banco     : MySQL, base portal_videos em localhost:3306
+)
 echo   Para parar: Ctrl + C nesta janela
 echo.
 
 start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for ($i = 0; $i -lt 90; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://localhost:%PORTA%/' | Out-Null; Start-Process 'http://localhost:%PORTA%/'; break } catch { Start-Sleep -Seconds 1 } }"
 
-"%JH%\bin\java.exe" -jar "%JAR%" --server.port=%PORTA%
+"%JH%\bin\java.exe" -jar "%JAR%" --server.port=%PORTA% %PERFIL%
 set "SAIDA=%ERRORLEVEL%"
 del "%TMP_JAVA%" >nul 2>&1
 endlocal & exit /b %SAIDA%
 
 :checar_java
-rem Argumento 1: java.exe a testar. Argumento 2: pasta do JDK, quando ja conhecida.
-rem A pasta so e lida da saida do Java em ultimo caso: essa saida vem em cp1252 e o
-rem cmd le em cp850, o que corrompe caminhos com acento (usuario "Garcia" com acento).
 set "JV=0"
 set "JH=%~2"
 "%~1" -XshowSettings:properties -version > "%TMP_JAVA%" 2>&1 || exit /b 1

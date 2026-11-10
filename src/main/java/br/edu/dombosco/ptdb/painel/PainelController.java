@@ -1,10 +1,11 @@
 package br.edu.dombosco.ptdb.painel;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class PainelController {
 
     private final PainelService painelService;
@@ -13,11 +14,12 @@ public class PainelController {
         this.painelService = painelService;
     }
 
-    @GetMapping("/admin")
-    public String painel(Model model) {
-        model.addAttribute("indicadores", painelService.carregarIndicadores());
-        model.addAttribute("atividades", painelService.atividadesRecentes());
-        model.addAttribute("fila", painelService.filaDeAvaliacao());
-        return "painel/painel";
+    @GetMapping("/api/admin/painel")
+    public Map<String, Object> painel() {
+        Map<String, Object> dados = new HashMap<>();
+        dados.put("indicadores", painelService.carregarIndicadores());
+        dados.put("atividades", painelService.atividadesRecentes());
+        dados.put("fila", painelService.filaDeAvaliacao());
+        return dados;
     }
 }

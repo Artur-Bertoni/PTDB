@@ -4,7 +4,7 @@ import br.edu.dombosco.ptdb.video.VideoStatus;
 
 public enum DecisaoAvaliacao {
 
-    APROVADO("Aprovado", "Vídeo aprovado e publicado no catálogo.", VideoStatus.APROVADO),
+    APROVADO("Aprovado", "Vídeo aprovado e publicado na tela inicial.", VideoStatus.APROVADO),
     REPROVADO("Reprovado", "Vídeo reprovado.", VideoStatus.REPROVADO),
     AJUSTES_SOLICITADOS("Ajustes solicitados", "Ajustes solicitados ao responsável pelo vídeo.",
             VideoStatus.AJUSTES_SOLICITADOS);

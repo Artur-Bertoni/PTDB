@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Painel administrativo</h1>
+                <p>Resumo do portal: vídeos, categorias, FAQ e últimas movimentações.</p>
+            </div>
+        </section>
+
+        <section class="indicadores">
+            <div class="indicador"><span>Vídeos cadastrados</span><strong id="videosCadastrados">0</strong></div>
+            <div class="indicador"><span>Novos nos últimos 7 dias</span><strong id="videosNovosNaSemana">0</strong></div>
+            <div class="indicador"><span>Aguardando avaliação</span><strong id="videosAguardando">0</strong></div>
+            <div class="indicador"><span>Categorias</span><strong id="categorias">0</strong></div>
+            <div class="indicador"><span>Categorias sem vídeo aprovado</span><strong id="categoriasSemAprovados">0</strong></div>
+            <div class="indicador"><span>Perguntas no FAQ</span><strong id="itensFaq">0</strong></div>
+        </section>
+
+        <div class="duas-colunas">
+
+            <section class="caixa">
+                <h2>Atividades recentes</h2>
+                <ul class="lista" id="atividades"></ul>
+                <p id="semAtividades" class="vazio"></p>
+            </section>
+
+            <section class="caixa">
+                <h2>Fila de avaliação</h2>
+                <ul class="lista" id="fila"></ul>
+                <p id="semFila" class="vazio"></p>
+            </section>
+
+        </div>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_painel.js"></script>
+
+</body>
+
+</html>

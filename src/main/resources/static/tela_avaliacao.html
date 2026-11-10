@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liberar Vídeos - Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Liberar Vídeos</h1>
+                <p>Assista aos vídeos enviados e decida se eles podem ser publicados.</p>
+            </div>
+        </section>
+
+        <p id="mensagem" class="mensagem"></p>
+
+        <div class="duas-colunas">
+
+            <section class="caixa">
+                <h2>Fila de avaliação (<span id="totalFila">0</span>)</h2>
+                <ul class="lista" id="fila"></ul>
+                <p id="filaVazia" class="vazio"></p>
+            </section>
+
+            <section class="caixa" id="areaAvaliacao">
+                <h2>Avaliar vídeo</h2>
+                <p class="vazio" id="nenhumSelecionado">Escolha um vídeo da fila para avaliar.</p>
+
+                <div id="videoSelecionado" style="display: none;">
+                    <h3 id="selecionadoTitulo"></h3>
+                    <p class="detalhe" id="selecionadoDetalhes"></p>
+                    <p class="texto-longo" id="selecionadoDescricao" style="margin: 12px 0;"></p>
+                    <p><a class="botao botao-secundario" id="linkAssistir" target="_blank">Assistir vídeo</a></p>
+
+                    <div id="historicoVideo"></div>
+
+                    <form id="formulario" class="formulario" style="margin-top: 20px;" novalidate>
+                        <div class="campo campo-largo">
+                            <label>Decisão *</label>
+                            <div class="opcoes">
+                                <label><input type="radio" name="decisao" value="APROVADO"> Aprovar</label>
+                                <label><input type="radio" name="decisao" value="AJUSTES_SOLICITADOS"> Solicitar ajustes</label>
+                                <label><input type="radio" name="decisao" value="REPROVADO"> Reprovar</label>
+                            </div>
+                            <span class="erro-campo" data-erro="decisao"></span>
+                        </div>
+                        <div class="campo campo-largo">
+                            <label for="parecer">Parecer *</label>
+                            <textarea id="parecer" name="parecer" rows="4" maxlength="4000"
+                                      placeholder="Explique a decisão para quem enviou o vídeo"></textarea>
+                            <span class="erro-campo" data-erro="parecer"></span>
+                        </div>
+                        <div class="botoes-formulario">
+                            <button type="submit" class="botao">Enviar avaliação</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+        </div>
+
+        <section class="caixa tabela-rolagem">
+            <h2>Histórico de avaliações</h2>
+            <table class="tabela">
+                <thead>
+                    <tr><th>Data</th><th>Vídeo</th><th>Avaliador</th><th>Decisão</th><th>Parecer</th></tr>
+                </thead>
+                <tbody id="historico"></tbody>
+            </table>
+            <p id="historicoVazio" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_avaliacao.js"></script>
+
+</body>
+
+</html>

@@ -1,128 +1,92 @@
 package br.edu.dombosco.ptdb.video;
 
-import br.edu.dombosco.ptdb.categoria.CategoriaService;
+import br.edu.dombosco.ptdb.avaliacao.Avaliacao;
+import br.edu.dombosco.ptdb.avaliacao.AvaliacaoService;
 import br.edu.dombosco.ptdb.security.UsuarioLogado;
 import br.edu.dombosco.ptdb.security.UsuarioSessao;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
-@RequestMapping("/admin/videos")
+@RestController
+@RequestMapping("/api/gestao/videos")
 public class VideoController {
 
-    private static final String VIEW = "videos/lista";
-    private static final String REDIRECT_LISTA = "redirect:/admin/videos";
-
     private final VideoService videoService;
-    private final CategoriaService categoriaService;
+    private final AvaliacaoService avaliacaoService;
 
-    public VideoController(VideoService videoService, CategoriaService categoriaService) {
+    public VideoController(VideoService videoService, AvaliacaoService avaliacaoService) {
         this.videoService = videoService;
-        this.categoriaService = categoriaService;
+        this.avaliacaoService = avaliacaoService;
     }
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String termo,
-                         @RequestParam(required = false) Long categoriaId,
-                         @RequestParam(required = false) VideoStatus status,
-                         Model model) {
-        prepararListagem(model, termo, categoriaId, status);
-        return VIEW;
+    public List<VideoGestao> listar(HttpSession session) {
+        UsuarioLogado usuario = UsuarioSessao.buscar(session);
+        List<VideoGestao> lista = new ArrayList<>();
+        for (Video video : videoService.listarParaGestao(usuario)) {
+            lista.add(montar(video, usuario));
+        }
+        return lista;
     }
 
-    @GetMapping("/novo")
-    public String novo(Model model) {
-        prepararListagem(model, null, null, null);
-        abrirFormulario(model, new VideoForm(), null);
-        return VIEW;
+    @GetMapping("/{id}")
+    public VideoGestao buscar(@PathVariable Long id, HttpSession session) {
+        UsuarioLogado usuario = UsuarioSessao.buscar(session);
+        return montar(videoService.buscarParaGestao(id, usuario), usuario);
     }
 
     @PostMapping
-    public String criar(@ModelAttribute("form") VideoForm form,
-                        BindingResult result,
-                        HttpSession session,
-                        Model model,
-                        RedirectAttributes redirect) {
-        videoService.validar(form, null, result);
-        if (result.hasErrors()) {
-            prepararListagem(model, null, null, null);
-            abrirFormulario(model, form, null);
-            return VIEW;
-        }
+    public ResponseEntity<Object> criar(VideoForm form, HttpSession session) {
         UsuarioLogado usuario = UsuarioSessao.buscar(session);
-        videoService.criar(form, usuario.getId());
-        redirect.addFlashAttribute("mensagem", "Vídeo cadastrado. Ele ficará aguardando avaliação.");
-        return REDIRECT_LISTA;
-    }
-
-    @GetMapping("/{id}/editar")
-    public String editar(@PathVariable Long id, Model model) {
-        Video video = videoService.buscarPorId(id);
-        VideoForm form = new VideoForm();
-        form.setId(video.getId());
-        form.setTitulo(video.getTitulo());
-        form.setDescricao(video.getDescricao());
-        form.setAutor(video.getAutor());
-        form.setCategoriaId(video.getCategoria().getId());
-        form.setDataPublicacao(video.getDataPublicacao());
-        form.setOrigem(video.getOrigemVideo());
-        if (video.isLink()) {
-            form.setLink(video.getArquivoLink());
+        Map<String, String> erros = videoService.validar(form, null);
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest().body(erros);
         }
-        prepararListagem(model, null, null, null);
-        abrirFormulario(model, form, video);
-        return VIEW;
+        videoService.criar(form, usuario);
+        return ResponseEntity.ok(Map.of("mensagem", mensagemSalvo(usuario, "Vídeo cadastrado")));
     }
 
     @PostMapping("/{id}")
-    public String atualizar(@PathVariable Long id,
-                            @ModelAttribute("form") VideoForm form,
-                            BindingResult result,
-                            Model model,
-                            RedirectAttributes redirect) {
-        Video atual = videoService.buscarPorId(id);
-        form.setId(id);
-        videoService.validar(form, atual, result);
-        if (result.hasErrors()) {
-            prepararListagem(model, null, null, null);
-            abrirFormulario(model, form, atual);
-            return VIEW;
+    public ResponseEntity<Object> atualizar(@PathVariable Long id, VideoForm form, HttpSession session) {
+        UsuarioLogado usuario = UsuarioSessao.buscar(session);
+        Video atual = videoService.buscarParaGestao(id, usuario);
+        Map<String, String> erros = videoService.validar(form, atual);
+        if (!erros.isEmpty()) {
+            return ResponseEntity.badRequest().body(erros);
         }
-        videoService.atualizar(id, form);
-        redirect.addFlashAttribute("mensagem", "Vídeo atualizado. Ele voltou para avaliação.");
-        return REDIRECT_LISTA;
+        videoService.atualizar(id, form, usuario);
+        return ResponseEntity.ok(Map.of("mensagem", mensagemSalvo(usuario, "Vídeo atualizado")));
     }
 
-    @PostMapping("/{id}/excluir")
-    public String excluir(@PathVariable Long id, RedirectAttributes redirect) {
-        videoService.excluir(id);
-        redirect.addFlashAttribute("mensagem", "Vídeo excluído.");
-        return REDIRECT_LISTA;
+    @DeleteMapping("/{id}")
+    public Map<String, String> excluir(@PathVariable Long id, HttpSession session) {
+        UsuarioLogado usuario = UsuarioSessao.buscar(session);
+        videoService.excluir(id, usuario);
+        return Map.of("mensagem", "Vídeo excluído.");
     }
 
-    private void prepararListagem(Model model, String termo, Long categoriaId, VideoStatus status) {
-        model.addAttribute("videos", videoService.listar(termo, categoriaId, status));
-        model.addAttribute("indicadores", videoService.indicadores());
-        model.addAttribute("categorias", categoriaService.listarAtivas());
-        model.addAttribute("statuses", VideoStatus.values());
-        model.addAttribute("termo", termo);
-        model.addAttribute("categoriaId", categoriaId);
-        model.addAttribute("status", status);
+    private VideoGestao montar(Video video, UsuarioLogado usuario) {
+        String parecer = null;
+        Avaliacao ultima = avaliacaoService.ultimaDoVideo(video.getId());
+        if (ultima != null) {
+            parecer = ultima.getParecer();
+        }
+        return new VideoGestao(video, usuario.isAdministrador(), parecer);
     }
 
-    private void abrirFormulario(Model model, VideoForm form, Video video) {
-        model.addAttribute("form", form);
-        model.addAttribute("edicao", video != null);
-        model.addAttribute("video", video);
-        model.addAttribute("origens", OrigemVideo.values());
+    private String mensagemSalvo(UsuarioLogado usuario, String inicio) {
+        if (usuario.isAdministrador()) {
+            return inicio + " e publicado.";
+        }
+        return inicio + ". Ele ficará aguardando avaliação.";
     }
 }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Acadêmico de Vídeos</title>
+    <link rel="stylesheet" href="/css/estilo.css">
+</head>
+
+<body>
+
+    <header class="cabecalho" id="cabecalho"></header>
+
+    <main>
+
+        <section class="titulo">
+            <div>
+                <h1>Portal de Vídeos Acadêmicos</h1>
+                <p>Visualize e compartilhe conteúdos educacionais.</p>
+            </div>
+        </section>
+
+        <section class="filtros">
+
+            <input type="text" id="pesquisa" placeholder="Pesquisar vídeo por título, descrição ou autor...">
+
+            <select id="filtroCategoria">
+                <option value="">Todas as Categorias</option>
+            </select>
+
+        </section>
+
+        <section>
+            <div id="listaVideos" class="videos-container"></div>
+            <p id="semVideos" class="vazio"></p>
+        </section>
+
+    </main>
+
+    <footer class="rodape" id="rodape"></footer>
+
+    <script src="/js/comum.js"></script>
+    <script src="/js/tela_inicial.js"></script>
+
+</body>
+
+</html>

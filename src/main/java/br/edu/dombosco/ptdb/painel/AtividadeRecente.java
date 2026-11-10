@@ -23,6 +23,10 @@ public class AtividadeRecente {
         return tipo;
     }
 
+    public String getDescricao() {
+        return tipo.getDescricao();
+    }
+
     public LocalDateTime getMomento() {
         return momento;
     }

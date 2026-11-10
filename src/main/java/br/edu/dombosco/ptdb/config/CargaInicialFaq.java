@@ -25,18 +25,18 @@ public class CargaInicialFaq implements CommandLineRunner {
         }
         repository.save(new ItemFaq("Como faço para favoritar um vídeo?",
                 "Clique no ícone de coração no canto do card do vídeo ou na página do vídeo. "
-                        + "Os favoritos ficam reunidos em \"Meus favoritos\", no menu lateral.", VIDEOS));
-        repository.save(new ItemFaq("Por que um vídeo que eu assisti não aparece mais no catálogo?",
+                        + "Os favoritos ficam reunidos em \"Meus Favoritos\", no menu do topo.", VIDEOS));
+        repository.save(new ItemFaq("Por que um vídeo que eu assisti não aparece mais na tela inicial?",
                 "O vídeo pode ter sido removido ou estar passando por uma nova avaliação depois de "
-                        + "ser editado. Ele volta ao catálogo quando for aprovado novamente.", VIDEOS));
-        repository.save(new ItemFaq("Quando um vídeo cadastrado aparece no catálogo?",
-                "Todo vídeo cadastrado passa pela avaliação. Ele só aparece no catálogo depois de "
-                        + "aprovado pelo avaliador.", AVALIACAO));
+                        + "ser editado. Ele volta à tela inicial quando for aprovado novamente.", VIDEOS));
+        repository.save(new ItemFaq("Quando um vídeo enviado aparece na tela inicial?",
+                "Vídeos enviados por alunos passam pela avaliação e só aparecem depois de aprovados. "
+                        + "Vídeos cadastrados por administradores são publicados direto.", AVALIACAO));
         repository.save(new ItemFaq("O que acontece quando o avaliador solicita ajustes?",
-                "O vídeo sai da fila de avaliação até que o administrador faça as correções indicadas "
+                "O vídeo sai da fila de avaliação até que quem o enviou faça as correções indicadas "
                         + "no parecer. Ao salvar a edição, o vídeo volta para a fila.", AVALIACAO));
         repository.save(new ItemFaq("Como os vídeos são organizados por categoria?",
-                "Cada vídeo pertence a uma categoria principal. No catálogo, escolha a categoria na "
-                        + "lista lateral para ver somente os vídeos dela.", CATEGORIAS));
+                "Cada vídeo pertence a uma categoria principal. Na tela inicial, escolha a categoria no "
+                        + "filtro para ver somente os vídeos dela.", CATEGORIAS));
     }
 }

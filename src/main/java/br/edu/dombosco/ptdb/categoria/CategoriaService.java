@@ -3,9 +3,10 @@ package br.edu.dombosco.ptdb.categoria;
 import br.edu.dombosco.ptdb.common.RecursoNaoEncontradoException;
 import br.edu.dombosco.ptdb.common.RegraNegocioException;
 import br.edu.dombosco.ptdb.video.VideoRepository;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.Errors;
 
 @Service
 public class CategoriaService {
@@ -30,22 +31,24 @@ public class CategoriaService {
         return categoria;
     }
 
-    public void validar(CategoriaForm form, Errors errors) {
+    public Map<String, String> validar(CategoriaForm form) {
+        Map<String, String> erros = new LinkedHashMap<>();
         if (form.getNome() == null || form.getNome().isBlank()) {
-            errors.rejectValue("nome", "obrigatorio", "O nome é obrigatório.");
-            return;
+            erros.put("nome", "O nome é obrigatório.");
+            return erros;
         }
         if (form.getNome().length() > 100) {
-            errors.rejectValue("nome", "tamanho", "O nome deve ter no máximo 100 caracteres.");
-            return;
+            erros.put("nome", "O nome deve ter no máximo 100 caracteres.");
+            return erros;
         }
         if (form.getDescricao() != null && form.getDescricao().length() > 255) {
-            errors.rejectValue("descricao", "tamanho", "A descrição deve ter no máximo 255 caracteres.");
+            erros.put("descricao", "A descrição deve ter no máximo 255 caracteres.");
         }
         Categoria mesmoNome = categoriaRepository.findByNomeIgnoreCase(form.getNome().trim());
         if (mesmoNome != null && mesmoNome.isAtiva() && !mesmoNome.getId().equals(form.getId())) {
-            errors.rejectValue("nome", "duplicado", "Já existe uma categoria com esse nome.");
+            erros.put("nome", "Já existe uma categoria com esse nome.");
         }
+        return erros;
     }
 
     public Categoria criar(CategoriaForm form) {

@@ -12,6 +12,7 @@
 *.ear
 *.tar.gz
 *.rar
+*.zip
 
 hs_err_pid*
 replay_pid*
