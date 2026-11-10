@@ -84,7 +84,7 @@ if "%MODO%"=="h2" set "PERFIL=--spring.profiles.active=h2"
 
 echo.
 echo [3/4] Compilando o projeto (na primeira vez baixa Maven e dependencias, pode demorar)...
-call "%~dp0mvnw.cmd" -B -q -DskipTests package
+call "%~dp0mvnw.cmd" -B -q -DskipTests clean package
 if errorlevel 1 (
     echo Falha na compilacao. Veja as mensagens acima.
     goto falha
@@ -114,6 +114,11 @@ start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for ($i = 0; $i 
 "%JH%\bin\java.exe" -jar "%JAR%" --server.port=%PORTA% %PERFIL%
 set "SAIDA=%ERRORLEVEL%"
 del "%TMP_JAVA%" >nul 2>&1
+if not "%SAIDA%"=="0" (
+    echo.
+    echo A aplicacao terminou com erro. Veja as mensagens acima.
+    pause
+)
 endlocal & exit /b %SAIDA%
 
 :checar_java

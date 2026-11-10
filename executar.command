@@ -140,7 +140,7 @@ fi
 
 echo
 echo "[3/4] Compilando o projeto (na primeira vez baixa Maven e dependencias, pode demorar)..."
-if ! sh ./mvnw -B -q -DskipTests package; then
+if ! sh ./mvnw -B -q -DskipTests clean package; then
     echo "Falha na compilacao. Veja as mensagens acima."
     falha
 fi
