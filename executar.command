@@ -178,4 +178,15 @@ echo
     done
 ) &
 
+trap ':' INT
 "$JAVA_HOME/bin/java" -jar "$JAR" --server.port="$PORTA" $PERFIL
+SAIDA=$?
+trap - INT
+
+echo
+case "$SAIDA" in
+    0|130|143) echo "A aplicacao foi encerrada." ;;
+    *) echo "A aplicacao terminou com erro (codigo $SAIDA). Veja as mensagens acima." ;;
+esac
+read -r -p "Pressione Enter para fechar..." _
+exit "$SAIDA"

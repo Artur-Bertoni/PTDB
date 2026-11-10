@@ -1,4 +1,12 @@
 @echo off
+
+rem Roda dentro de "cmd /k" para a janela continuar aberta depois que o script termina
+if not "%PTDB_JANELA%"=="1" (
+    set "PTDB_JANELA=1"
+    cmd /k call "%~f0" %*
+    exit /b
+)
+
 setlocal EnableExtensions
 title PTDB - Portal de Treinamento Dom Bosco
 
@@ -109,15 +117,20 @@ if "%MODO%"=="h2" (
 echo   Para parar: Ctrl + C nesta janela
 echo.
 
-start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for ($i = 0; $i -lt 90; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://localhost:%PORTA%/' | Out-Null; Start-Process 'http://localhost:%PORTA%/'; break } catch { Start-Sleep -Seconds 1 } }"
+start "" /b powershell -NoProfile -Command "$ProgressPreference = 'SilentlyContinue'; for ($i = 0; $i -lt 90; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 'http://localhost:%PORTA%/' | Out-Null; Start-Process 'http://localhost:%PORTA%/'; break } catch { Start-Sleep -Seconds 1 } }"
 
 "%JH%\bin\java.exe" -jar "%JAR%" --server.port=%PORTA% %PERFIL%
 set "SAIDA=%ERRORLEVEL%"
 del "%TMP_JAVA%" >nul 2>&1
-if not "%SAIDA%"=="0" (
-    echo.
-    echo A aplicacao terminou com erro. Veja as mensagens acima.
-    pause
+echo.
+if "%SAIDA%"=="0" (
+    echo A aplicacao foi encerrada.
+) else if "%SAIDA%"=="130" (
+    echo A aplicacao foi encerrada.
+) else if "%SAIDA%"=="-1073741510" (
+    echo A aplicacao foi encerrada.
+) else (
+    echo A aplicacao terminou com erro ^(codigo %SAIDA%^). Veja as mensagens acima.
 )
 endlocal & exit /b %SAIDA%
 
@@ -158,5 +171,4 @@ exit /b 0
 :falha
 del "%TMP_JAVA%" >nul 2>&1
 echo.
-pause
 endlocal & exit /b 1
